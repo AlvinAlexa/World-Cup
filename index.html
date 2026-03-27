@@ -460,7 +460,6 @@ img { display: block; max-width: 100%; }
 </head>
 <body>
 
-<!-- header banner image (preserved from original) -->
 <div class="separator" style="clear: both; max-width:1280px; margin:0 auto; padding:0 20px;">
   <a href="https://contentful-asset-proxy.sd.indazn.com/vhp9jnid12wf/1EnMC9k2gEoEOgfMithKfh/89e356e704cf44637c87c6e324bfa487/04-Desktop__LRD_and_Tablet_Landscape_16x9_Burkhardt.jpg?fm=webp&amp;q=35" style="display: block; padding: 1em 0; text-align: center;">
     <img alt="" border="0" width="320" data-original-height="1152" data-original-width="2048" src="https://contentful-asset-proxy.sd.indazn.com/vhp9jnid12wf/1EnMC9k2gEoEOgfMithKfh/89e356e704cf44637c87c6e324bfa487/04-Desktop__LRD_and_Tablet_Landscape_16x9_Burkhardt.jpg?fm=webp&amp;q=35" style="max-width:100%; height:auto; border-radius:12px;" />
@@ -528,7 +527,7 @@ img { display: block; max-width: 100%; }
 <script>
 (function() {
   const BLOG_URL = 'https://sports803livestream.blogspot.com';
-  const MAX_RESULTS = 500;        // fetch up to 500 recent posts (enough for most blogs)
+  const MAX_RESULTS = 500;        // fetch up to 500 recent posts
   const PAGE_SIZE = 9;            // cards per load
 
   // mapping for fancy ribbons (display short codes based on actual label names)
@@ -552,15 +551,14 @@ img { display: block; max-width: 100%; }
     'Football': '⚽'
   };
 
-  let allPosts = [];          // raw posts from feed
-  let filteredPosts = [];     // after label filter
-  let sortedPosts = [];       // after sort
+  let allPosts = [];
+  let filteredPosts = [];
+  let sortedPosts = [];
   let currentLabel = 'All';
   let currentSort = 'date-desc';
   let searchQuery = '';
-  let displayedCount = 0;     // number of cards currently shown in grid
+  let displayedCount = 0;
 
-  // DOM elements
   const gridContainer = document.getElementById('fbGrid');
   const navTabsContainer = document.getElementById('fbNavTabs');
   const filterBarContainer = document.getElementById('fbFilterBar');
@@ -573,7 +571,6 @@ img { display: block; max-width: 100%; }
   const loadProgress = document.getElementById('fbLoadProgress');
   const progressFill = document.getElementById('fbProgressFill');
 
-  // Helper: escape HTML
   function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
@@ -581,12 +578,9 @@ img { display: block; max-width: 100%; }
       if (m === '<') return '&lt;';
       if (m === '>') return '&gt;';
       return m;
-    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-      return c;
-    });
+    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) { return c; });
   }
 
-  // Format date YYYY-MM-DD to readable
   function formatDate(dateStr) {
     if (!dateStr) return '';
     try {
@@ -595,94 +589,127 @@ img { display: block; max-width: 100%; }
     } catch(e) { return dateStr.slice(0,10); }
   }
 
-  // get short ribbon code
   function getShortCode(label) {
     if (SHORT_MAP[label]) return SHORT_MAP[label];
-    // fallback: uppercase first letters
     return label.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,4);
   }
 
-  // fetch all posts from Blogger (full feed, extract labels)
+  // ----- JSONP fallback (works from any origin) -----
+  function fetchBloggerFeedViaJSONP(callbackName = 'bloggerCallback') {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error('JSONP request timed out'));
+      }, 10000);
+
+      const cleanup = () => {
+        if (document.head.contains(script)) document.head.removeChild(script);
+        clearTimeout(timeout);
+        delete window[callbackName];
+      };
+
+      window[callbackName] = function(data) {
+        cleanup();
+        if (data && data.feed) {
+          resolve(data);
+        } else {
+          reject(new Error('Invalid JSONP response'));
+        }
+      };
+
+      const url = `${BLOG_URL}/feeds/posts/default?alt=json-in-script&max-results=${MAX_RESULTS}&callback=${callbackName}`;
+      script.src = url;
+      script.onerror = () => {
+        cleanup();
+        reject(new Error('JSONP script failed to load'));
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  // ----- Fetch with modern fetch + fallback to JSONP -----
   async function fetchAllPosts() {
-    const url = `${BLOG_URL}/feeds/posts/default?alt=json&max-results=${MAX_RESULTS}`;
+    // First try standard fetch (works if same origin)
     try {
-      const response = await fetch(url);
+      const response = await fetch(`${BLOG_URL}/feeds/posts/default?alt=json&max-results=${MAX_RESULTS}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      const entries = data.feed?.entry || [];
-      const posts = [];
-      for (let entry of entries) {
-        // extract link
-        let link = '';
-        if (entry.link) {
-          for (let l of entry.link) {
-            if (l.rel === 'alternate') { link = l.href; break; }
-          }
-        }
-        // extract image (thumbnail or from content)
-        let image = null;
-        if (entry.media$thumbnail) {
-          image = entry.media$thumbnail.url.replace(/\/s\d+-c\//,'/s800-c/');
-        } else if (entry.content && entry.content.$t) {
-          const imgMatch = entry.content.$t.match(/<img[^>]+src=["']([^"']+)["']/i);
-          if (imgMatch) image = imgMatch[1];
-        }
-        // extract categories (labels)
-        const categories = [];
-        if (entry.category) {
-          entry.category.forEach(cat => {
-            if (cat.term) categories.push(cat.term);
-          });
-        }
-        // use first label as primary, but keep all for filter flexibility
-        const primaryLabel = categories.length ? categories[0] : 'Football';
-        const pubDate = entry.published?.$t ? entry.published.$t.slice(0,10) : '';
-        posts.push({
-          title: entry.title?.$t || 'Untitled',
-          link: link,
-          image: image,
-          labels: categories,
-          primaryLabel: primaryLabel,
-          date: pubDate,
-          rawDate: entry.published?.$t || ''
-        });
+      return parseBloggerFeed(data);
+    } catch (fetchError) {
+      console.warn('Fetch failed, falling back to JSONP:', fetchError);
+      // Fallback to JSONP
+      try {
+        const jsonpData = await fetchBloggerFeedViaJSONP('fb_jsonp_' + Date.now());
+        return parseBloggerFeed(jsonpData);
+      } catch (jsonpError) {
+        console.error('JSONP also failed:', jsonpError);
+        throw new Error('Unable to fetch posts. Please check your internet and that the blog is public.');
       }
-      // remove duplicates by link
-      const unique = [];
-      const seen = new Set();
-      for (let p of posts) {
-        if (!p.link || seen.has(p.link)) continue;
-        seen.add(p.link);
-        unique.push(p);
-      }
-      // sort by date desc (latest first)
-      unique.sort((a,b) => (b.rawDate || '').localeCompare(a.rawDate || ''));
-      return unique;
-    } catch (err) {
-      console.error('Blogger fetch error:', err);
-      return [];
     }
   }
 
-  // build dynamic filter UI from unique labels present in posts
+  function parseBloggerFeed(data) {
+    const entries = data.feed?.entry || [];
+    const posts = [];
+    for (let entry of entries) {
+      let link = '';
+      if (entry.link) {
+        for (let l of entry.link) {
+          if (l.rel === 'alternate') { link = l.href; break; }
+        }
+      }
+      let image = null;
+      if (entry.media$thumbnail) {
+        image = entry.media$thumbnail.url.replace(/\/s\d+-c\//,'/s800-c/');
+      } else if (entry.content && entry.content.$t) {
+        const imgMatch = entry.content.$t.match(/<img[^>]+src=["']([^"']+)["']/i);
+        if (imgMatch) image = imgMatch[1];
+      }
+      const categories = [];
+      if (entry.category) {
+        entry.category.forEach(cat => {
+          if (cat.term) categories.push(cat.term);
+        });
+      }
+      const primaryLabel = categories.length ? categories[0] : 'Football';
+      const pubDate = entry.published?.$t ? entry.published.$t.slice(0,10) : '';
+      posts.push({
+        title: entry.title?.$t || 'Untitled',
+        link: link,
+        image: image,
+        labels: categories,
+        primaryLabel: primaryLabel,
+        date: pubDate,
+        rawDate: entry.published?.$t || ''
+      });
+    }
+    // remove duplicates by link
+    const unique = [];
+    const seen = new Set();
+    for (let p of posts) {
+      if (!p.link || seen.has(p.link)) continue;
+      seen.add(p.link);
+      unique.push(p);
+    }
+    unique.sort((a,b) => (b.rawDate || '').localeCompare(a.rawDate || ''));
+    return unique;
+  }
+
   function buildFiltersFromPosts(posts) {
     const labelSet = new Set();
     for (let post of posts) {
       post.labels.forEach(lbl => labelSet.add(lbl));
     }
     const sortedLabels = Array.from(labelSet).sort((a,b) => a.localeCompare(b));
-    // generate nav tabs + chips
-    const allTab = { label: 'All', short: 'ALL' };
-    const labelItems = [allTab, ...sortedLabels.map(lbl => ({ label: lbl, short: getShortCode(lbl) }))];
+    const labelItems = [{ label: 'All', short: 'ALL' }, ...sortedLabels.map(lbl => ({ label: lbl, short: getShortCode(lbl) }))];
 
-    // render nav tabs
     navTabsContainer.innerHTML = labelItems.map(item => `
       <button class="fb-nav-tab ${item.label === 'All' ? 'active' : ''}" data-label="${escapeHtml(item.label)}" onclick="window.fbSetFilter('${escapeHtml(item.label).replace(/'/g, "\\'")}')">
         ${item.label === 'All' ? 'All Matches' : escapeHtml(item.label)}
       </button>
     `).join('');
 
-    // render filter chips (mobile friendly)
     filterBarContainer.innerHTML = `<span class="fb-filter-bar-label">Filter:</span>` + labelItems.map(item => `
       <button class="fb-chip ${item.label === 'All' ? 'active' : ''}" data-label="${escapeHtml(item.label)}" onclick="window.fbSetFilter('${escapeHtml(item.label).replace(/'/g, "\\'")}')">
         ${item.label === 'All' ? 'All' : escapeHtml(getShortCode(item.label))}
@@ -690,20 +717,17 @@ img { display: block; max-width: 100%; }
     `).join('');
   }
 
-  // apply label filter + search + sort and re-render first page
   function applyFiltersAndRender() {
     let temp = [...allPosts];
-    // label filter
     if (currentLabel !== 'All') {
       temp = temp.filter(post => post.labels.includes(currentLabel));
     }
-    // search filter
     if (searchQuery.trim() !== '') {
       const q = searchQuery.trim().toLowerCase();
       temp = temp.filter(post => post.title.toLowerCase().includes(q) || post.primaryLabel.toLowerCase().includes(q));
     }
     filteredPosts = temp;
-    // apply sort
+
     if (currentSort === 'date-desc') {
       filteredPosts.sort((a,b) => (b.rawDate || '').localeCompare(a.rawDate || ''));
     } else if (currentSort === 'date-asc') {
@@ -716,9 +740,7 @@ img { display: block; max-width: 100%; }
     renderCurrentPage();
   }
 
-  // render cards from sortedPosts starting from 0 up to PAGE_SIZE
   function renderCurrentPage() {
-    if (!gridContainer) return;
     const total = sortedPosts.length;
     if (total === 0) {
       gridContainer.innerHTML = `<div class="fb-empty"><div class="fb-empty-icon">🏟️</div><div class="fb-empty-text">No posts match your selection.</div></div>`;
@@ -729,7 +751,6 @@ img { display: block; max-width: 100%; }
     }
     const nextBatch = sortedPosts.slice(0, PAGE_SIZE);
     displayedCount = nextBatch.length;
-    // build HTML for cards
     const cardsHtml = nextBatch.map((post, idx) => generateCardHtml(post, idx === 0)).join('');
     gridContainer.innerHTML = cardsHtml;
     sectionLabelSpan.innerText = currentLabel === 'All' ? 'All Posts' : currentLabel;
@@ -737,16 +758,14 @@ img { display: block; max-width: 100%; }
     updateLoadMoreUI(total);
   }
 
-  // generate single card
   function generateCardHtml(post, isFeatured) {
     const imgHtml = post.image
       ? `<img src="${escapeHtml(post.image)}" alt="${escapeHtml(post.title)}" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'fb-card-img-fallback\'>⚽</div>'">`
       : `<div class="fb-card-img-fallback">⚽</div>`;
     const shortCode = getShortCode(post.primaryLabel);
-    const ribbonColorAttr = `data-l="${escapeHtml(shortCode)}"`;
     return `<a href="${escapeHtml(post.link)}" class="fb-card ${isFeatured ? 'fb-card-feat' : ''}" target="_blank" rel="noopener noreferrer">
       <div class="fb-card-img">
-        <div class="fb-ribbon" ${ribbonColorAttr}>${escapeHtml(shortCode)}</div>
+        <div class="fb-ribbon" data-l="${escapeHtml(shortCode)}">${escapeHtml(shortCode)}</div>
         ${imgHtml}
         <div class="fb-img-badge">Watch</div>
         <div class="fb-play-ov"><div class="fb-play-ring"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div>
@@ -768,7 +787,6 @@ img { display: block; max-width: 100%; }
     </a>`;
   }
 
-  // load more (increment displayed cards)
   function loadMorePosts() {
     if (displayedCount >= sortedPosts.length) return;
     const remaining = sortedPosts.slice(displayedCount, displayedCount + PAGE_SIZE);
@@ -801,10 +819,8 @@ img { display: block; max-width: 100%; }
     }
   }
 
-  // event handlers
   function setFilter(label) {
     currentLabel = label;
-    // update active states
     document.querySelectorAll('.fb-nav-tab').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-label') === label);
     });
@@ -824,7 +840,6 @@ img { display: block; max-width: 100%; }
     applyFiltersAndRender();
   }
 
-  // share helper
   window.fbSharePost = function(event, url, title) {
     event.preventDefault();
     event.stopPropagation();
@@ -838,22 +853,26 @@ img { display: block; max-width: 100%; }
 
   window.fbSetFilter = setFilter;
 
-  // initial load
   async function init() {
     gridContainer.innerHTML = '<div class="fb-loading"><div class="fb-spinner"></div> Loading latest posts from the blog...</div>';
-    const posts = await fetchAllPosts();
-    allPosts = posts;
-    if (allPosts.length === 0) {
-      gridContainer.innerHTML = '<div class="fb-empty"><div class="fb-empty-icon">⚠️</div><div class="fb-empty-text">Unable to fetch posts. Make sure blog is public and feed is accessible.</div></div>';
+    try {
+      const posts = await fetchAllPosts();
+      allPosts = posts;
+      if (allPosts.length === 0) {
+        gridContainer.innerHTML = '<div class="fb-empty"><div class="fb-empty-icon">⚠️</div><div class="fb-empty-text">No posts found. Make sure the blog has public posts.</div></div>';
+        countPill.innerText = '0';
+        return;
+      }
+      buildFiltersFromPosts(allPosts);
+      applyFiltersAndRender();
+      sortSelect.addEventListener('change', setSort);
+      searchInput.addEventListener('input', setSearch);
+      loadMoreBtn.addEventListener('click', loadMorePosts);
+    } catch (err) {
+      console.error(err);
+      gridContainer.innerHTML = `<div class="fb-empty"><div class="fb-empty-icon">🔌</div><div class="fb-empty-text">${err.message || 'Unable to fetch posts. Ensure the blog is public and accessible.'}</div></div>`;
       countPill.innerText = '0';
-      return;
     }
-    buildFiltersFromPosts(allPosts);
-    applyFiltersAndRender();
-    // attach events
-    sortSelect.addEventListener('change', setSort);
-    searchInput.addEventListener('input', setSearch);
-    loadMoreBtn.addEventListener('click', loadMorePosts);
   }
 
   init();
