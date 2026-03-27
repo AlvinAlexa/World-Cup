@@ -1,3 +1,8 @@
+I've updated the code to fetch only posts with the **"Football"** label from your Blogger site. Now the page will display exclusively those posts, and all filtering and navigation will be centered around that single category.
+
+Here's the revised HTML—simply paste it into your Blogger post/page using the HTML editor:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -86,7 +91,7 @@ img { display: block; max-width: 100%; }
 }
 .fb-logo-text span { color: var(--accent); }
 
-/* dynamic nav tabs (auto-generated) */
+/* Single label indicator */
 .fb-nav-tabs {
   display: flex; align-items: stretch;
   gap: 0; flex: 1;
@@ -111,7 +116,6 @@ img { display: block; max-width: 100%; }
   transition: left .2s, right .2s;
   border-radius: 2px;
 }
-.fb-nav-tab:hover { color: var(--ink-mid); }
 .fb-nav-tab.active { color: var(--accent); }
 .fb-nav-tab.active::after { left: 6px; right: 6px; box-shadow: 0 0 8px var(--accent-g); }
 
@@ -184,37 +188,7 @@ img { display: block; max-width: 100%; }
   color: var(--ink-dim); pointer-events: none;
 }
 
-/* ---------- FILTER CHIPS (auto) ---------- */
-.fb-filter-bar {
-  display: flex; align-items: center;
-  gap: 8px; flex-wrap: wrap;
-  margin-bottom: 24px;
-}
-.fb-filter-bar-label {
-  font-family: var(--font-head); font-size: 10px;
-  font-weight: 700; letter-spacing: .15em;
-  text-transform: uppercase; color: var(--ink-dim);
-  margin-right: 4px;
-}
-.fb-chip {
-  padding: 5px 14px; border-radius: 4px;
-  font-family: var(--font-head); font-size: 10px;
-  font-weight: 700; letter-spacing: .1em;
-  text-transform: uppercase;
-  background: var(--card);
-  border: 1px solid var(--border);
-  color: var(--ink-dim);
-  transition: all .18s;
-}
-.fb-chip:hover { color: var(--ink-mid); border-color: var(--border-hov); }
-.fb-chip.active {
-  background: var(--accent-g);
-  border-color: rgba(0,212,255,.3);
-  color: var(--accent);
-  box-shadow: 0 2px 10px rgba(0,212,255,.1);
-}
-
-/* ---------- GRID LAYOUT ---------- */
+/* ---------- GRID HEADER ---------- */
 .fb-grid-header {
   display: flex; align-items: center;
   justify-content: space-between;
@@ -245,6 +219,7 @@ img { display: block; max-width: 100%; }
   cursor: pointer;
 }
 
+/* ---------- GRID LAYOUT ---------- */
 .fb-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -454,7 +429,6 @@ img { display: block; max-width: 100%; }
 @media (max-width: 500px) {
   .fb-logo-text { font-size: 16px; }
   .fb-nav-tabs { display: none; }
-  .fb-filter-bar { gap: 6px; }
 }
 </style>
 </head>
@@ -472,7 +446,9 @@ img { display: block; max-width: 100%; }
       <div class="fb-logo-icon"></div>
       <span class="fb-logo-text">Foot<span>ball</span></span>
     </div>
-    <nav class="fb-nav-tabs" id="fbNavTabs"></nav>
+    <nav class="fb-nav-tabs">
+      <button class="fb-nav-tab active">Football Only</button>
+    </nav>
     <div class="fb-masthead-right">
       <span class="fb-count-pill" id="fbCountPill">—</span>
     </div>
@@ -482,9 +458,9 @@ img { display: block; max-width: 100%; }
 <div class="fb-page">
   <div class="fb-hero">
     <div>
-      <div class="fb-hero-label">Live &amp; Latest</div>
-      <div class="fb-hero-title">Football<br><span>Coverage</span></div>
-      <div class="fb-hero-sub">Stream highlights, match reports &amp; news across all major leagues.</div>
+      <div class="fb-hero-label">Exclusive Coverage</div>
+      <div class="fb-hero-title">Football<br><span>Posts</span></div>
+      <div class="fb-hero-sub">All posts with the "Football" label – match reports, highlights, and analysis.</div>
     </div>
     <div class="fb-search-wrap">
       <svg class="fb-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -492,10 +468,8 @@ img { display: block; max-width: 100%; }
     </div>
   </div>
 
-  <div class="fb-filter-bar" id="fbFilterBar"></div>
-
   <div class="fb-grid-header">
-    <div class="fb-section-label" id="fbSectionLabel">All Posts</div>
+    <div class="fb-section-label" id="fbSectionLabel">Football Posts</div>
     <div class="fb-sort">
       <span class="fb-sort-label">Sort:</span>
       <select class="fb-sort-select" id="fbSortSelect">
@@ -507,7 +481,7 @@ img { display: block; max-width: 100%; }
   </div>
 
   <div class="fb-grid" id="fbGrid">
-    <div class="fb-loading"><div class="fb-spinner"></div> &nbsp; Fetching latest football posts...</div>
+    <div class="fb-loading"><div class="fb-spinner"></div> &nbsp; Fetching Football posts...</div>
   </div>
 
   <div class="fb-load-more-wrap" id="fbLoadMoreWrap" style="display:none">
@@ -520,48 +494,24 @@ img { display: block; max-width: 100%; }
 <footer>
   <div class="fb-page-footer">
     <span class="fb-footer-brand">Foot<span>ball</span> Hub</span>
-    <span class="fb-footer-note" style="font-size:11px; color:var(--ink-dim);">⚡ Live from Blogger · Exact league labels</span>
+    <span class="fb-footer-note" style="font-size:11px; color:var(--ink-dim);">⚡ Only posts with the "Football" label</span>
   </div>
 </footer>
 
 <script>
 (function() {
-  const BLOG_URL = 'https://sports803livestream.blogspot.com';
+  // LABEL‑SPECIFIC FEED – only posts with the "Football" label
+  const BLOG_LABEL_URL = 'https://sports803livestream.blogspot.com/feeds/posts/default/-/Football';
   const MAX_RESULTS = 500;        // fetch up to 500 recent posts
   const PAGE_SIZE = 9;            // cards per load
 
-  // mapping for fancy ribbons (display short codes based on actual label names)
-  const SHORT_MAP = {
-    'Premier League': 'EPL',
-    'EPL': 'EPL',
-    'Serie A': 'ITA',
-    'La Liga': 'ESP',
-    'LaLiga': 'ESP',
-    'Bundesliga': 'GER',
-    'French League': 'L1',
-    'Ligue 1': 'L1',
-    'Champions League': 'UCL',
-    'UCL': 'UCL',
-    'Saudi Pro League': 'SPL',
-    'Saudi League': 'SPL',
-    'Championship': 'CHAMP',
-    'Turkey': 'TUR',
-    'Süper Lig': 'TUR',
-    'World Cup': 'WC',
-    'Football': '⚽'
-  };
-
   let allPosts = [];
-  let filteredPosts = [];
   let sortedPosts = [];
-  let currentLabel = 'All';
   let currentSort = 'date-desc';
   let searchQuery = '';
   let displayedCount = 0;
 
   const gridContainer = document.getElementById('fbGrid');
-  const navTabsContainer = document.getElementById('fbNavTabs');
-  const filterBarContainer = document.getElementById('fbFilterBar');
   const sortSelect = document.getElementById('fbSortSelect');
   const searchInput = document.getElementById('fbSearch');
   const countPill = document.getElementById('fbCountPill');
@@ -589,9 +539,10 @@ img { display: block; max-width: 100%; }
     } catch(e) { return dateStr.slice(0,10); }
   }
 
+  // short code for "Football" label – you can customize
   function getShortCode(label) {
-    if (SHORT_MAP[label]) return SHORT_MAP[label];
-    return label.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,4);
+    if (label === 'Football') return '⚽';
+    return label.slice(0,4).toUpperCase();
   }
 
   // ----- JSONP fallback (works from any origin) -----
@@ -618,7 +569,7 @@ img { display: block; max-width: 100%; }
         }
       };
 
-      const url = `${BLOG_URL}/feeds/posts/default?alt=json-in-script&max-results=${MAX_RESULTS}&callback=${callbackName}`;
+      const url = `${BLOG_LABEL_URL}?alt=json-in-script&max-results=${MAX_RESULTS}&callback=${callbackName}`;
       script.src = url;
       script.onerror = () => {
         cleanup();
@@ -629,10 +580,10 @@ img { display: block; max-width: 100%; }
   }
 
   // ----- Fetch with modern fetch + fallback to JSONP -----
-  async function fetchAllPosts() {
+  async function fetchFootballPosts() {
     // First try standard fetch (works if same origin)
     try {
-      const response = await fetch(`${BLOG_URL}/feeds/posts/default?alt=json&max-results=${MAX_RESULTS}`);
+      const response = await fetch(`${BLOG_LABEL_URL}?alt=json&max-results=${MAX_RESULTS}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       return parseBloggerFeed(data);
@@ -696,46 +647,22 @@ img { display: block; max-width: 100%; }
     return unique;
   }
 
-  function buildFiltersFromPosts(posts) {
-    const labelSet = new Set();
-    for (let post of posts) {
-      post.labels.forEach(lbl => labelSet.add(lbl));
-    }
-    const sortedLabels = Array.from(labelSet).sort((a,b) => a.localeCompare(b));
-    const labelItems = [{ label: 'All', short: 'ALL' }, ...sortedLabels.map(lbl => ({ label: lbl, short: getShortCode(lbl) }))];
-
-    navTabsContainer.innerHTML = labelItems.map(item => `
-      <button class="fb-nav-tab ${item.label === 'All' ? 'active' : ''}" data-label="${escapeHtml(item.label)}" onclick="window.fbSetFilter('${escapeHtml(item.label).replace(/'/g, "\\'")}')">
-        ${item.label === 'All' ? 'All Matches' : escapeHtml(item.label)}
-      </button>
-    `).join('');
-
-    filterBarContainer.innerHTML = `<span class="fb-filter-bar-label">Filter:</span>` + labelItems.map(item => `
-      <button class="fb-chip ${item.label === 'All' ? 'active' : ''}" data-label="${escapeHtml(item.label)}" onclick="window.fbSetFilter('${escapeHtml(item.label).replace(/'/g, "\\'")}')">
-        ${item.label === 'All' ? 'All' : escapeHtml(getShortCode(item.label))}
-      </button>
-    `).join('');
-  }
-
-  function applyFiltersAndRender() {
+  function applySortAndSearch() {
     let temp = [...allPosts];
-    if (currentLabel !== 'All') {
-      temp = temp.filter(post => post.labels.includes(currentLabel));
-    }
+    // search filter
     if (searchQuery.trim() !== '') {
       const q = searchQuery.trim().toLowerCase();
       temp = temp.filter(post => post.title.toLowerCase().includes(q) || post.primaryLabel.toLowerCase().includes(q));
     }
-    filteredPosts = temp;
-
+    // apply sort
     if (currentSort === 'date-desc') {
-      filteredPosts.sort((a,b) => (b.rawDate || '').localeCompare(a.rawDate || ''));
+      temp.sort((a,b) => (b.rawDate || '').localeCompare(a.rawDate || ''));
     } else if (currentSort === 'date-asc') {
-      filteredPosts.sort((a,b) => (a.rawDate || '').localeCompare(b.rawDate || ''));
+      temp.sort((a,b) => (a.rawDate || '').localeCompare(b.rawDate || ''));
     } else if (currentSort === 'alpha') {
-      filteredPosts.sort((a,b) => a.title.localeCompare(b.title));
+      temp.sort((a,b) => a.title.localeCompare(b.title));
     }
-    sortedPosts = filteredPosts;
+    sortedPosts = temp;
     displayedCount = 0;
     renderCurrentPage();
   }
@@ -743,17 +670,17 @@ img { display: block; max-width: 100%; }
   function renderCurrentPage() {
     const total = sortedPosts.length;
     if (total === 0) {
-      gridContainer.innerHTML = `<div class="fb-empty"><div class="fb-empty-icon">🏟️</div><div class="fb-empty-text">No posts match your selection.</div></div>`;
+      gridContainer.innerHTML = `<div class="fb-empty"><div class="fb-empty-icon">🏟️</div><div class="fb-empty-text">No Football posts found.</div></div>`;
       loadMoreWrap.style.display = 'none';
       countPill.innerText = `0 posts`;
-      sectionLabelSpan.innerText = currentLabel === 'All' ? 'All Posts' : currentLabel;
+      sectionLabelSpan.innerText = 'Football Posts';
       return;
     }
     const nextBatch = sortedPosts.slice(0, PAGE_SIZE);
     displayedCount = nextBatch.length;
     const cardsHtml = nextBatch.map((post, idx) => generateCardHtml(post, idx === 0)).join('');
     gridContainer.innerHTML = cardsHtml;
-    sectionLabelSpan.innerText = currentLabel === 'All' ? 'All Posts' : currentLabel;
+    sectionLabelSpan.innerText = 'Football Posts';
     countPill.innerText = `${total} post${total !== 1 ? 's' : ''}`;
     updateLoadMoreUI(total);
   }
@@ -792,7 +719,7 @@ img { display: block; max-width: 100%; }
     const remaining = sortedPosts.slice(displayedCount, displayedCount + PAGE_SIZE);
     if (remaining.length === 0) return;
     const fragment = document.createDocumentFragment();
-    remaining.forEach((post, idx) => {
+    remaining.forEach((post) => {
       const cardDiv = document.createElement('div');
       cardDiv.innerHTML = generateCardHtml(post, false);
       fragment.appendChild(cardDiv.firstElementChild);
@@ -819,25 +746,14 @@ img { display: block; max-width: 100%; }
     }
   }
 
-  function setFilter(label) {
-    currentLabel = label;
-    document.querySelectorAll('.fb-nav-tab').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-label') === label);
-    });
-    document.querySelectorAll('.fb-chip').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-label') === label);
-    });
-    applyFiltersAndRender();
-  }
-
   function setSort() {
     currentSort = sortSelect.value;
-    applyFiltersAndRender();
+    applySortAndSearch();
   }
 
   function setSearch() {
     searchQuery = searchInput.value;
-    applyFiltersAndRender();
+    applySortAndSearch();
   }
 
   window.fbSharePost = function(event, url, title) {
@@ -851,26 +767,23 @@ img { display: block; max-width: 100%; }
     }
   };
 
-  window.fbSetFilter = setFilter;
-
   async function init() {
-    gridContainer.innerHTML = '<div class="fb-loading"><div class="fb-spinner"></div> Loading latest posts from the blog...</div>';
+    gridContainer.innerHTML = '<div class="fb-loading"><div class="fb-spinner"></div> Loading Football posts...</div>';
     try {
-      const posts = await fetchAllPosts();
+      const posts = await fetchFootballPosts();
       allPosts = posts;
       if (allPosts.length === 0) {
-        gridContainer.innerHTML = '<div class="fb-empty"><div class="fb-empty-icon">⚠️</div><div class="fb-empty-text">No posts found. Make sure the blog has public posts.</div></div>';
+        gridContainer.innerHTML = '<div class="fb-empty"><div class="fb-empty-icon">⚠️</div><div class="fb-empty-text">No posts with the "Football" label found. Make sure the blog has posts under that label.</div></div>';
         countPill.innerText = '0';
         return;
       }
-      buildFiltersFromPosts(allPosts);
-      applyFiltersAndRender();
+      applySortAndSearch();
       sortSelect.addEventListener('change', setSort);
       searchInput.addEventListener('input', setSearch);
       loadMoreBtn.addEventListener('click', loadMorePosts);
     } catch (err) {
       console.error(err);
-      gridContainer.innerHTML = `<div class="fb-empty"><div class="fb-empty-icon">🔌</div><div class="fb-empty-text">${err.message || 'Unable to fetch posts. Ensure the blog is public and accessible.'}</div></div>`;
+      gridContainer.innerHTML = `<div class="fb-empty"><div class="fb-empty-icon">🔌</div><div class="fb-empty-text">${err.message || 'Unable to fetch posts. Ensure the blog is public and the "Football" label exists.'}</div></div>`;
       countPill.innerText = '0';
     }
   }
@@ -880,3 +793,4 @@ img { display: block; max-width: 100%; }
 </script>
 </body>
 </html>
+```
