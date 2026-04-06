@@ -1,787 +1,631 @@
-
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Football Hub | Live Match Coverage & Highlights</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet" />
-<style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports 803 — Live Scores</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    :root {
+      --bg:    #080808;
+      --bg2:   #111;
+      --bg3:   #181818;
+      --bg4:   #232323;
+      --red:   #e8192c;
+      --red2:  #ff2d42;
+      --green: #00e676;
+      --gold:  #f5b800;
+      --text:  #f0f0f0;
+      --dim:   #666;
+      --mid:   #aaa;
+      --border:rgba(255,255,255,.07);
+      --radius:14px;
+      --fh:    'Barlow Condensed',sans-serif;
+      --fb:    'DM Sans',sans-serif;
+    }
 
-/* ---------- RESET & GLOBAL ---------- */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg:        #06090a;
-  --surface:   #0b0f10;
-  --card:      #0e1315;
-  --card-hov:  #111618;
-  --border:    #1a2124;
-  --border-hov:#253035;
-  --ink:       #dde8ec;
-  --ink-mid:   #7a9aaa;
-  --ink-dim:   #3a5060;
-  --ink-faint: #141e22;
-  --accent:    #00d4ff;
-  --accent-g:  rgba(0,212,255,.18);
-  --accent-2:  #ff3d5a;
-  --gold:      #f5c842;
-  --r:         8px;
-  --font-head: 'Barlow Condensed', sans-serif;
-  --font-body: 'Barlow', sans-serif;
+```
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--fb);
+  min-height: 100vh;
 }
-html { background: var(--bg); color: var(--ink); font-family: var(--font-body); scroll-behavior: smooth; }
-body { min-height: 100vh; background: var(--bg); }
-a { text-decoration: none; color: inherit; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; }
-img { display: block; max-width: 100%; }
 
-/* ---------- PAGE WRAPPER ---------- */
-.fb-page {
-  max-width: 1280px;
+/* ── WRAPPER ── */
+#live-scores-widget {
+  max-width: 560px;
   margin: 0 auto;
-  padding: 0 20px 60px;
+  padding: 0 0 24px;
 }
 
-/* ---------- STICKY MASTHEAD ---------- */
-.fb-masthead {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100;
-  backdrop-filter: blur(12px);
-}
-.fb-masthead-inner {
-  max-width: 1280px; margin: 0 auto; padding: 0 20px;
-  display: flex; align-items: stretch; gap: 0;
-  height: 56px;
-}
-.fb-masthead::before {
-  content: ''; display: block; height: 3px;
-  background: linear-gradient(90deg, var(--accent) 0%, #7b61ff 33%, var(--accent-2) 66%, var(--gold) 100%);
-}
-.fb-logo {
-  display: flex; align-items: center; gap: 10px;
-  padding-right: 24px;
-  border-right: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.fb-logo-icon {
-  width: 30px; height: 30px; border-radius: 50%;
-  background: conic-gradient(var(--accent) 0deg 60deg, var(--surface) 60deg 120deg,
-    var(--accent) 120deg 180deg, var(--surface) 180deg 240deg,
-    var(--accent) 240deg 300deg, var(--surface) 300deg 360deg);
-  box-shadow: 0 0 14px var(--accent-g);
-  position: relative; flex-shrink: 0;
-}
-.fb-logo-icon::after {
-  content: ''; position: absolute; inset: 4px;
-  border-radius: 50%; background: var(--surface);
-  border: 2px solid rgba(0,212,255,.25);
-}
-.fb-logo-text {
-  font-family: var(--font-head);
-  font-size: 20px; font-weight: 800;
-  letter-spacing: .06em; text-transform: uppercase;
-  color: var(--ink); line-height: 1;
-}
-.fb-logo-text span { color: var(--accent); }
-
-/* Single label indicator */
-.fb-nav-tabs {
-  display: flex; align-items: stretch;
-  gap: 0; flex: 1;
-  overflow-x: auto; scrollbar-width: none;
-  padding: 0 6px;
-}
-.fb-nav-tabs::-webkit-scrollbar { display: none; }
-.fb-nav-tab {
-  height: 100%; padding: 0 14px;
-  display: flex; align-items: center;
-  font-family: var(--font-head);
-  font-size: 11px; font-weight: 700;
-  letter-spacing: .12em; text-transform: uppercase;
-  color: var(--ink-dim); white-space: nowrap;
-  position: relative; transition: color .18s;
-  flex-shrink: 0;
-}
-.fb-nav-tab::after {
-  content: ''; position: absolute; bottom: 0;
-  left: 50%; right: 50%; height: 2px;
-  background: var(--accent);
-  transition: left .2s, right .2s;
-  border-radius: 2px;
-}
-.fb-nav-tab.active { color: var(--accent); }
-.fb-nav-tab.active::after { left: 6px; right: 6px; box-shadow: 0 0 8px var(--accent-g); }
-
-.fb-masthead-right {
-  display: flex; align-items: center;
-  padding-left: 16px; border-left: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.fb-count-pill {
-  font-family: var(--font-head);
-  font-size: 11px; font-weight: 700;
-  letter-spacing: .08em;
-  padding: 4px 12px; border-radius: 20px;
-  background: var(--accent-g);
-  border: 1px solid rgba(0,212,255,.2);
-  color: var(--accent);
-}
-
-/* ---------- HERO SECTION ---------- */
-.fb-hero {
-  padding: 32px 0 24px;
-  display: flex; align-items: flex-end;
-  justify-content: space-between; gap: 16px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 28px;
-}
-.fb-hero-label {
-  font-family: var(--font-head);
-  font-size: 11px; font-weight: 700;
-  letter-spacing: .2em; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 6px;
-  display: flex; align-items: center; gap: 7px;
-}
-.fb-hero-label::before {
-  content: ''; width: 18px; height: 2px; background: var(--accent);
-  border-radius: 2px;
-}
-.fb-hero-title {
-  font-family: var(--font-head);
-  font-size: clamp(28px, 4vw, 48px);
-  font-weight: 800; line-height: .95;
-  letter-spacing: -.01em; text-transform: uppercase;
-}
-.fb-hero-title span { color: var(--accent); }
-.fb-hero-sub {
-  font-size: 13px; color: var(--ink-mid);
-  margin-top: 8px; font-weight: 300; line-height: 1.5;
-}
-.fb-search-wrap {
-  position: relative; flex-shrink: 0;
-}
-.fb-search {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 9px 14px 9px 38px;
-  color: var(--ink); font-family: var(--font-body);
-  font-size: 13px; width: 220px;
-  transition: border-color .18s, box-shadow .18s;
-  outline: none;
-}
-.fb-search::placeholder { color: var(--ink-dim); }
-.fb-search:focus {
-  border-color: rgba(0,212,255,.35);
-  box-shadow: 0 0 0 3px rgba(0,212,255,.07);
-}
-.fb-search-icon {
-  position: absolute; left: 12px; top: 50%;
-  transform: translateY(-50%);
-  color: var(--ink-dim); pointer-events: none;
-}
-
-/* ---------- GRID HEADER ---------- */
-.fb-grid-header {
-  display: flex; align-items: center;
+/* ── HEADER ── */
+.widget-header {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 18px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(8,8,8,.97);
+  backdrop-filter: blur(14px);
+  z-index: 10;
 }
-.fb-section-label {
-  font-family: var(--font-head);
-  font-size: 12px; font-weight: 700;
-  letter-spacing: .15em; text-transform: uppercase;
-  color: var(--ink-mid);
-  display: flex; align-items: center; gap: 8px;
+.widget-title {
+  font-family: var(--fh);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
 }
-.fb-section-label::before {
-  content: ''; width: 3px; height: 14px;
-  background: var(--accent); border-radius: 2px;
+.widget-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--red);
+  font-family: var(--fh);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  animation: blink 1.4s infinite;
 }
-.fb-sort {
-  display: flex; align-items: center; gap: 6px;
-}
-.fb-sort-label {
-  font-size: 11px; color: var(--ink-dim); font-weight: 300;
-}
-.fb-sort-select {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 4px; padding: 4px 10px;
-  color: var(--ink-mid); font-size: 11px;
-  font-family: var(--font-body); outline: none;
+.widget-refresh-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--mid);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: .15s;
+  font-family: var(--fb);
 }
+.widget-refresh-btn:hover { border-color: var(--red); color: var(--text); }
+.widget-refresh-btn.spinning .refresh-icon { animation: spin .7s linear; }
 
-/* ---------- GRID LAYOUT ---------- */
-.fb-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+/* ── FILTER PILLS ── */
+#filter-pills {
+  display: flex;
+  gap: 7px;
+  padding: 10px 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
 }
-@media (max-width: 900px) { .fb-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px) { .fb-grid { grid-template-columns: 1fr; } }
-
-.fb-card-feat {
-  grid-column: span 2;
-}
-@media (max-width: 900px) { .fb-card-feat { grid-column: span 2; } }
-@media (max-width: 560px) { .fb-card-feat { grid-column: span 1; } }
-
-/* card styling */
-.fb-card {
-  background: var(--card);
+#filter-pills::-webkit-scrollbar { display: none; }
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 13px;
+  background: var(--bg3);
   border: 1px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  display: flex; flex-direction: column;
-  position: relative;
-  transition: transform .22s, box-shadow .22s, border-color .22s;
-  animation: fb-fade-up .4s ease both;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: .15s;
+  font-family: var(--fb);
+  color: var(--text);
 }
-.fb-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 50px rgba(0,0,0,.6), 0 0 0 1px rgba(0,212,255,.12);
-  border-color: var(--border-hov);
-}
-@keyframes fb-fade-up {
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
+.filter-pill:hover, .filter-pill.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
 }
 
-.fb-card-img {
-  position: relative; overflow: hidden;
-  width: 100%; height: 188px; flex-shrink: 0;
-  background: var(--ink-faint);
-}
-.fb-card-feat .fb-card-img { height: 280px; }
-.fb-card-img img {
-  width: 100%; height: 100%; object-fit: cover;
-  opacity: .85; transition: transform .55s ease, opacity .22s;
-}
-.fb-card:hover .fb-card-img img { transform: scale(1.06); opacity: .95; }
-.fb-card-img-fallback {
-  width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 36px; color: var(--ink-faint);
-  background: linear-gradient(145deg, #0b0f10, #06090a);
-}
-.fb-ribbon {
-  position: absolute; top: 12px; left: 0;
-  font-family: var(--font-head);
-  font-size: 9px; font-weight: 700; letter-spacing: .12em;
-  text-transform: uppercase;
-  padding: 3px 10px 3px 10px;
-  background: var(--accent);
-  color: #000;
-  border-radius: 0 3px 3px 0;
-  box-shadow: 3px 3px 10px rgba(0,0,0,.5);
-  z-index: 2;
-}
-.fb-img-badge {
-  position: absolute; bottom: 10px; right: 10px;
-  background: rgba(6,9,10,.85); backdrop-filter: blur(4px);
-  border: 1px solid var(--border);
-  border-radius: 4px; padding: 3px 8px;
-  font-family: var(--font-head);
-  font-size: 9px; font-weight: 700; letter-spacing: .1em;
-  color: var(--ink-mid);
-  display: flex; align-items: center; gap: 4px;
-}
-.fb-img-badge::before { content: '▶'; font-size: 7px; color: var(--accent); }
-.fb-play-ov {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,.45); opacity: 0;
-  transition: opacity .2s;
-}
-.fb-card:hover .fb-play-ov { opacity: 1; }
-.fb-play-ring {
-  width: 50px; height: 50px; border-radius: 50%;
-  border: 2px solid var(--accent);
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(0,212,255,.12);
-  transform: scale(.85); transition: transform .2s;
-}
-.fb-card:hover .fb-play-ring { transform: scale(1); }
-
-.fb-card-body {
-  padding: 14px 16px 16px;
-  display: flex; flex-direction: column; flex: 1;
-}
-.fb-card-meta {
-  display: flex; align-items: center; gap: 8px;
-  margin-bottom: 10px;
-}
-.fb-card-date {
-  font-size: 10px; color: var(--ink-dim); font-weight: 400;
-  font-family: var(--font-head); letter-spacing: .06em;
-}
-.fb-card-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-faint); }
-.fb-card-league-tag {
-  font-family: var(--font-head); font-size: 9px;
-  font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--ink-dim);
-}
-.fb-card-title {
-  font-family: var(--font-head);
-  font-size: 17px; font-weight: 700;
-  line-height: 1.2; letter-spacing: .01em;
-  color: var(--ink);
-  display: -webkit-box; -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical; overflow: hidden;
-  transition: color .18s; flex: 1;
-}
-.fb-card:hover .fb-card-title { color: var(--accent); }
-.fb-card-feat .fb-card-title { font-size: 22px; -webkit-line-clamp: 4; }
-
-.fb-card-foot {
-  display: flex; align-items: center;
+/* ── COUNT BAR ── */
+#count-bar {
+  padding: 8px 16px;
+  font-size: 11px;
+  color: var(--dim);
+  font-weight: 600;
+  letter-spacing: .4px;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-top: 14px; padding-top: 12px;
-  border-top: 1px solid var(--border);
 }
-.fb-read-link {
-  font-family: var(--font-head); font-size: 10px;
-  font-weight: 700; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--accent);
-  display: flex; align-items: center; gap: 5px;
-  transition: gap .18s;
-}
-.fb-read-link::after { content: '→'; }
-.fb-card:hover .fb-read-link { gap: 9px; }
-.fb-share-btn {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: var(--border); display: flex;
-  align-items: center; justify-content: center;
-  color: var(--ink-dim); transition: all .18s;
-}
-.fb-share-btn:hover { background: var(--accent-g); color: var(--accent); }
-
-/* loading & empty */
-.fb-loading, .fb-empty {
-  grid-column: 1 / -1;
-  text-align: center; padding: 60px 0;
-  color: var(--ink-dim);
-}
-.fb-spinner {
-  width: 24px; height: 24px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
+.refresh-dot {
   display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  margin-left: 5px;
+  animation: blink 2s infinite;
+  vertical-align: middle;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
 
-.fb-load-more-wrap {
-  margin-top: 36px;
-  display: flex; align-items: center; justify-content: center;
-  flex-direction: column; gap: 12px;
-}
-.fb-load-more {
-  padding: 12px 36px; border-radius: 6px;
-  border: 1px solid rgba(0,212,255,.3);
-  background: var(--accent-g);
-  color: var(--accent);
-  font-family: var(--font-head); font-size: 12px;
-  font-weight: 700; letter-spacing: .15em;
+/* ── LEAGUE HEADER ── */
+.lg-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg2);
+  border-left: 3px solid var(--red);
+  margin-top: 8px;
+  font-family: var(--fh);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  color: var(--mid);
   text-transform: uppercase;
-  transition: all .22s;
 }
-.fb-load-more:hover {
-  background: rgba(0,212,255,.28);
-  box-shadow: 0 0 24px rgba(0,212,255,.15);
+.lg-live-count {
+  margin-left: auto;
+  background: rgba(232,25,44,.15);
+  color: var(--red);
+  border: 1px solid rgba(232,25,44,.3);
+  border-radius: 12px;
+  font-size: 10px;
+  padding: 2px 8px;
+  font-weight: 800;
 }
-.fb-progress-bar {
-  width: 180px; height: 2px;
-  background: var(--border); border-radius: 2px; overflow: hidden;
-}
-.fb-progress-fill {
-  height: 100%; background: var(--accent);
-  transition: width .3s;
-}
-.fb-page-footer {
-  border-top: 1px solid var(--border);
-  padding: 18px 20px;
-  max-width: 1280px; margin: 0 auto;
-  display: flex; align-items: center;
-  justify-content: space-between; flex-wrap: wrap;
-}
-.fb-footer-brand {
-  font-family: var(--font-head); font-size: 13px;
-  font-weight: 800; text-transform: uppercase;
-  color: var(--ink-mid);
-}
-.fb-footer-brand span { color: var(--accent); }
 
-@media (max-width: 768px) {
-  .fb-hero { flex-direction: column; align-items: flex-start; }
-  .fb-search-wrap { display: none; }
-  .fb-masthead-right { display: none; }
+/* ── SCORE CARD ── */
+.score-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 0 12px 8px;
+  transition: .15s;
 }
-@media (max-width: 500px) {
-  .fb-logo-text { font-size: 16px; }
-  .fb-nav-tabs { display: none; }
+.score-card.live {
+  border-color: rgba(232,25,44,.4);
+  background: linear-gradient(160deg, #130404 0%, #111 100%);
+  box-shadow: 0 0 0 1px rgba(232,25,44,.08), 0 4px 20px rgba(0,0,0,.4);
 }
-</style>
+.score-card:hover { border-color: rgba(232,25,44,.3); }
+
+.card-meta {
+  font-size: 10px;
+  color: var(--dim);
+  font-weight: 700;
+  letter-spacing: .9px;
+  text-transform: uppercase;
+  margin-bottom: 9px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.teams-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.team.right {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.team-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+.team-name {
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.score-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  min-width: 70px;
+}
+.score-nums {
+  font-family: var(--fh);
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  line-height: 1;
+}
+.score-status {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  color: var(--dim);
+}
+.score-status.live {
+  color: var(--red);
+  animation: blink 1.4s infinite;
+}
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.live-dot {
+  width: 7px; height: 7px;
+  background: var(--red);
+  border-radius: 50%;
+  animation: blink 1s infinite;
+  flex-shrink: 0;
+}
+
+/* ── ACTIONS ── */
+.card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.match-time-label {
+  font-size: 11px;
+  color: var(--dim);
+  font-weight: 600;
+}
+.watch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--red), var(--red2));
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-family: var(--fh);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  padding: 7px 16px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform .15s, box-shadow .15s;
+}
+.watch-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 18px rgba(232,25,44,.5);
+}
+.watch-btn:active { transform: scale(.97); }
+
+/* ── SKELETON ── */
+.skeleton {
+  background: linear-gradient(90deg, #1e1e1e 25%, #2a2a2a 50%, #1e1e1e 75%);
+  background-size: 200% auto;
+  animation: shimmer 1.3s infinite;
+  border-radius: 8px;
+}
+.skel-card {
+  height: 96px;
+  margin: 0 12px 8px;
+  border-radius: var(--radius);
+}
+
+/* ── EMPTY / ERROR ── */
+.state-box {
+  text-align: center;
+  padding: 44px 20px 32px;
+  color: var(--dim);
+}
+.state-icon { font-size: 48px; margin-bottom: 12px; }
+.state-title { font-size: 16px; font-weight: 700; color: var(--mid); margin-bottom: 6px; }
+.state-sub   { font-size: 13px; }
+
+/* ── FOOTER ── */
+.widget-footer {
+  text-align: center;
+  padding: 14px;
+  font-size: 11px;
+  color: var(--dim);
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.widget-footer a { color: var(--red); text-decoration: none; font-weight: 700; }
+
+/* ── KEYFRAMES ── */
+@keyframes blink   { 0%,100%{opacity:1} 50%{opacity:.45} }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+@keyframes spin    { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:var(--bg2); }
+::-webkit-scrollbar-thumb { background:var(--bg4); border-radius:2px; }
+::-webkit-scrollbar-thumb:hover { background:var(--red); }
+
+/* ── RESPONSIVE ── */
+@media(max-width:400px) {
+  .team-name { font-size:12px; }
+  .score-nums { font-size:22px; }
+  .score-center { min-width:60px; }
+}
+```
+
+  </style>
 </head>
 <body>
 
-<img src="https://livetv.wtvpc.com/wp-content/uploads/2017/06/tv-image.gif" style="display: none;" />
+<div id="live-scores-widget">
 
-<header class="fb-masthead">
-  <div class="fb-masthead-inner">
-    <div class="fb-logo">
-      <div class="fb-logo-icon"></div>
-      <span class="fb-logo-text">Foot<span>ball</span></span>
-    </div>
-    <nav class="fb-nav-tabs">
-      <button class="fb-nav-tab active">Football Only</button>
-    </nav>
-    <div class="fb-masthead-right">
-      <span class="fb-count-pill" id="fbCountPill">—</span>
-    </div>
-  </div>
-</header>
+  <!-- HEADER -->
 
-<div class="fb-page">
-  <div class="fb-hero">
-    <div>
-      <div class="fb-hero-label">Exclusive Coverage</div>
-      <div class="fb-hero-title">Football<br><span>Posts</span></div>
-      <div class="fb-hero-sub">All posts with the "Football" label – match reports, highlights, and analysis.</div>
+  <div class="widget-header">
+    <div class="widget-title">
+      🔴 Live Scores
+      <span class="widget-live-badge">● LIVE</span>
     </div>
-    <div class="fb-search-wrap">
-      <svg class="fb-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input class="fb-search" type="text" id="fbSearch" placeholder="Search posts…" autocomplete="off" />
-    </div>
+    <button class="widget-refresh-btn" id="refresh-btn" onclick="triggerRefresh()">
+      <span class="refresh-icon" id="refresh-icon">↻</span> Refresh
+    </button>
   </div>
 
-  <div class="fb-grid-header">
-    <div class="fb-section-label" id="fbSectionLabel">Football Posts</div>
-    <div class="fb-sort">
-      <span class="fb-sort-label">Sort:</span>
-      <select class="fb-sort-select" id="fbSortSelect">
-        <option value="date-desc">Newest first</option>
-        <option value="date-asc">Oldest first</option>
-        <option value="alpha">A → Z</option>
-      </select>
-    </div>
+  <!-- FILTER PILLS -->
+
+  <div id="filter-pills">
+    <div class="filter-pill active" data-sport="all" onclick="setFilter('all')">🌍 All</div>
+    <div class="filter-pill" data-sport="soccer"     onclick="setFilter('soccer')">⚽ Football</div>
+    <div class="filter-pill" data-sport="basketball" onclick="setFilter('basketball')">🏀 NBA</div>
+    <div class="filter-pill" data-sport="football"   onclick="setFilter('football')">🏈 NFL</div>
+    <div class="filter-pill" data-sport="hockey"     onclick="setFilter('hockey')">🏒 NHL</div>
+    <div class="filter-pill" data-sport="mma"        onclick="setFilter('mma')">🥊 MMA</div>
   </div>
 
-  <div class="fb-grid" id="fbGrid">
-    <div class="fb-loading"><div class="fb-spinner"></div> &nbsp; Fetching Football posts...</div>
+  <!-- COUNT BAR -->
+
+  <div id="count-bar">
+    <span id="count-label">Loading…</span>
+    <span>Auto-refresh 30s<span class="refresh-dot"></span></span>
   </div>
 
-  <div class="fb-load-more-wrap" id="fbLoadMoreWrap" style="display:none">
-    <div class="fb-progress-bar"><div class="fb-progress-fill" id="fbProgressFill"></div></div>
-    <div class="fb-load-progress" id="fbLoadProgress"></div>
-    <button class="fb-load-more" id="fbLoadMoreBtn">↓ Load More Posts</button>
+  <!-- CARDS CONTAINER -->
+
+  <div id="cards-container"></div>
+
+  <!-- FOOTER -->
+
+  <div class="widget-footer">
+    Powered by <a href="https://sports803livestream.blogspot.com" target="_blank">Sports 803</a>
+    · Data via ESPN API
   </div>
+
 </div>
 
-<footer>
-  <div class="fb-page-footer">
-    <span class="fb-footer-brand">Foot<span>ball</span> Hub</span>
-    <span class="fb-footer-note" style="font-size:11px; color:var(--ink-dim);">⚡ Only posts with the "Football" label</span>
-  </div>
-</footer>
-
 <script>
-(function() {
-  // LABEL‑SPECIFIC FEED – only posts with the "Football" label
-  const BLOG_LABEL_URL = 'https://sports803livestream.blogspot.com/feeds/posts/default/-/Football';
-  const MAX_RESULTS = 500;        // fetch up to 500 recent posts
-  const PAGE_SIZE = 9;            // cards per load
+// ══════════════════════════════════════════════════════════════════════════════
+// SPORTS 803 — LIVE SCORES WIDGET (Standalone)
+// ══════════════════════════════════════════════════════════════════════════════
 
-  let allPosts = [];
-  let sortedPosts = [];
-  let currentSort = 'date-desc';
-  let searchQuery = '';
-  let displayedCount = 0;
+const WATCH_BASE = 'https://sports803livestream.blogspot.com/search?q=';
+const REFRESH_MS = 30000;
 
-  const gridContainer = document.getElementById('fbGrid');
-  const sortSelect = document.getElementById('fbSortSelect');
-  const searchInput = document.getElementById('fbSearch');
-  const countPill = document.getElementById('fbCountPill');
-  const sectionLabelSpan = document.getElementById('fbSectionLabel');
-  const loadMoreWrap = document.getElementById('fbLoadMoreWrap');
-  const loadMoreBtn = document.getElementById('fbLoadMoreBtn');
-  const loadProgress = document.getElementById('fbLoadProgress');
-  const progressFill = document.getElementById('fbProgressFill');
+// ─── SCALABLE LEAGUES — add here to show more ────────────────────────────────
+const LEAGUES = [
+  { sport:'soccer',     key:'eng.1',          name:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League',  short:'EPL',         emoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  { sport:'soccer',     key:'eng.2',           name:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Championship',   short:'CHAMP',       emoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  { sport:'soccer',     key:'uefa.champions',  name:'⭐ Champions League', short:'UCL',         emoji:'⭐'  },
+  { sport:'soccer',     key:'esp.1',           name:'🇪🇸 La Liga',         short:'LaLiga',      emoji:'🇪🇸' },
+  { sport:'soccer',     key:'ita.1',           name:'🇮🇹 Serie A',          short:'SerieA',      emoji:'🇮🇹' },
+  { sport:'soccer',     key:'ger.1',           name:'🇩🇪 Bundesliga',       short:'Bundesliga',  emoji:'🇩🇪' },
+  { sport:'soccer',     key:'fra.1',           name:'🇫🇷 Ligue 1',          short:'Ligue 1',     emoji:'🇫🇷' },
+  { sport:'soccer',     key:'usa.1',           name:'🇺🇸 MLS',              short:'MLS',         emoji:'🇺🇸' },
+  { sport:'basketball', key:'nba',             name:'🏀 NBA',              short:'NBA',         emoji:'🏀' },
+  { sport:'football',   key:'nfl',             name:'🏈 NFL',              short:'NFL',         emoji:'🏈' },
+  { sport:'hockey',     key:'nhl',             name:'🏒 NHL',              short:'NHL',         emoji:'🏒' },
+  { sport:'mma',        key:'ufc',             name:'🥊 UFC',              short:'UFC',         emoji:'🥊' },
+];
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) { return c; });
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let allData      = [];   // raw fetched results [{...lg, events:[...]}]
+let activeFilter = 'all';
+let isLoading    = false;
+
+// ─── CACHE ───────────────────────────────────────────────────────────────────
+const _cache  = new Map();
+const TTL     = 25000;
+
+async function fetchESPN(sport, key) {
+  const ck  = sport + '/' + key;
+  const now = Date.now();
+  const hit = _cache.get(ck);
+  if (hit && now - hit.ts < TTL) return hit.data;
+  try {
+    const r    = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport}/${key}/scoreboard`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    _cache.set(ck, { data, ts: now });
+    return data;
+  } catch (e) {
+    console.warn('[LiveScores]', ck, e.message);
+    return hit ? hit.data : null;
   }
+}
 
-  function formatDate(dateStr) {
-    if (!dateStr) return '';
-    try {
-      let d = new Date(dateStr);
-      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-    } catch(e) { return dateStr.slice(0,10); }
-  }
+// ─── FETCH ALL ───────────────────────────────────────────────────────────────
+async function fetchAll() {
+  const results = await Promise.all(
+    LEAGUES.map(lg =>
+      fetchESPN(lg.sport, lg.key).then(data =>
+        Object.assign({}, lg, { events: data ? (data.events || []) : [] })
+      )
+    )
+  );
+  return results;
+}
 
-  // short code for "Football" label – you can customize
-  function getShortCode(label) {
-    if (label === 'Football') return '⚽';
-    return label.slice(0,4).toUpperCase();
-  }
+// ─── WATCH URL ───────────────────────────────────────────────────────────────
+function makeWatchUrl(ev) {
+  const comp  = ev.competitions?.[0];
+  const home  = comp?.competitors?.find(c => c.homeAway === 'home');
+  const away  = comp?.competitors?.find(c => c.homeAway === 'away');
+  const nameA = away?.team?.displayName || away?.team?.name || '';
+  const nameB = home?.team?.displayName || home?.team?.name || '';
+  return WATCH_BASE + encodeURIComponent(`${nameA} vs ${nameB}`);
+}
 
-  // ----- JSONP fallback (works from any origin) -----
-  function fetchBloggerFeedViaJSONP(callbackName = 'bloggerCallback') {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      const timeout = setTimeout(() => {
-        cleanup();
-        reject(new Error('JSONP request timed out'));
-      }, 10000);
+// ─── FORMAT TIME ─────────────────────────────────────────────────────────────
+function fmtTime(dateStr) {
+  return new Date(dateStr).toLocaleTimeString('en', { hour:'2-digit', minute:'2-digit', hour12:true });
+}
 
-      const cleanup = () => {
-        if (document.head.contains(script)) document.head.removeChild(script);
-        clearTimeout(timeout);
-        delete window[callbackName];
-      };
+// ─── FILTER ──────────────────────────────────────────────────────────────────
+function setFilter(sport) {
+  activeFilter = sport;
+  document.querySelectorAll('.filter-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.sport === sport);
+  });
+  render();
+}
+window.setFilter = setFilter;
 
-      window[callbackName] = function(data) {
-        cleanup();
-        if (data && data.feed) {
-          resolve(data);
-        } else {
-          reject(new Error('Invalid JSONP response'));
-        }
-      };
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  const container = document.getElementById('cards-container');
+  const countLbl  = document.getElementById('count-label');
+  const frag      = document.createDocumentFragment();
+  let   liveCount = 0;
 
-      const url = `${BLOG_LABEL_URL}?alt=json-in-script&max-results=${MAX_RESULTS}&callback=${callbackName}`;
-      script.src = url;
-      script.onerror = () => {
-        cleanup();
-        reject(new Error('JSONP script failed to load'));
-      };
-      document.head.appendChild(script);
-    });
-  }
+  // Filter leagues by sport pill
+  const filtered = activeFilter === 'all'
+    ? allData
+    : allData.filter(lg => lg.sport === activeFilter);
 
-  // ----- Fetch with modern fetch + fallback to JSONP -----
-  async function fetchFootballPosts() {
-    // First try standard fetch (works if same origin)
-    try {
-      const response = await fetch(`${BLOG_LABEL_URL}?alt=json&max-results=${MAX_RESULTS}`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      return parseBloggerFeed(data);
-    } catch (fetchError) {
-      console.warn('Fetch failed, falling back to JSONP:', fetchError);
-      // Fallback to JSONP
-      try {
-        const jsonpData = await fetchBloggerFeedViaJSONP('fb_jsonp_' + Date.now());
-        return parseBloggerFeed(jsonpData);
-      } catch (jsonpError) {
-        console.error('JSONP also failed:', jsonpError);
-        throw new Error('Unable to fetch posts. Please check your internet and that the blog is public.');
-      }
-    }
-  }
+  filtered.forEach(lg => {
+    // Only LIVE events
+    const liveEvents = lg.events.filter(ev =>
+      ev.competitions?.[0]?.status?.type?.state === 'in'
+    );
+    if (!liveEvents.length) return;
 
-  function parseBloggerFeed(data) {
-    const entries = data.feed?.entry || [];
-    const posts = [];
-    for (let entry of entries) {
-      let link = '';
-      if (entry.link) {
-        for (let l of entry.link) {
-          if (l.rel === 'alternate') { link = l.href; break; }
-        }
-      }
-      let image = null;
-      if (entry.media$thumbnail) {
-        image = entry.media$thumbnail.url.replace(/\/s\d+-c\//,'/s800-c/');
-      } else if (entry.content && entry.content.$t) {
-        const imgMatch = entry.content.$t.match(/<img[^>]+src=["']([^"']+)["']/i);
-        if (imgMatch) image = imgMatch[1];
-      }
-      const categories = [];
-      if (entry.category) {
-        entry.category.forEach(cat => {
-          if (cat.term) categories.push(cat.term);
-        });
-      }
-      const primaryLabel = categories.length ? categories[0] : 'Football';
-      const pubDate = entry.published?.$t ? entry.published.$t.slice(0,10) : '';
-      posts.push({
-        title: entry.title?.$t || 'Untitled',
-        link: link,
-        image: image,
-        labels: categories,
-        primaryLabel: primaryLabel,
-        date: pubDate,
-        rawDate: entry.published?.$t || ''
-      });
-    }
-    // remove duplicates by link
-    const unique = [];
-    const seen = new Set();
-    for (let p of posts) {
-      if (!p.link || seen.has(p.link)) continue;
-      seen.add(p.link);
-      unique.push(p);
-    }
-    unique.sort((a,b) => (b.rawDate || '').localeCompare(a.rawDate || ''));
-    return unique;
-  }
+    // League header
+    const lgHdr = document.createElement('div');
+    lgHdr.className = 'lg-header';
+    lgHdr.innerHTML = `${lg.name} <span class="lg-live-count">${liveEvents.length} LIVE</span>`;
+    frag.appendChild(lgHdr);
 
-  function applySortAndSearch() {
-    let temp = [...allPosts];
-    // search filter
-    if (searchQuery.trim() !== '') {
-      const q = searchQuery.trim().toLowerCase();
-      temp = temp.filter(post => post.title.toLowerCase().includes(q) || post.primaryLabel.toLowerCase().includes(q));
-    }
-    // apply sort
-    if (currentSort === 'date-desc') {
-      temp.sort((a,b) => (b.rawDate || '').localeCompare(a.rawDate || ''));
-    } else if (currentSort === 'date-asc') {
-      temp.sort((a,b) => (a.rawDate || '').localeCompare(b.rawDate || ''));
-    } else if (currentSort === 'alpha') {
-      temp.sort((a,b) => a.title.localeCompare(b.title));
-    }
-    sortedPosts = temp;
-    displayedCount = 0;
-    renderCurrentPage();
-  }
+    liveEvents.forEach(ev => {
+      const comp   = ev.competitions?.[0];
+      const home   = comp?.competitors?.find(c => c.homeAway === 'home');
+      const away   = comp?.competitors?.find(c => c.homeAway === 'away');
+      if (!home || !away) return;
 
-  function renderCurrentPage() {
-    const total = sortedPosts.length;
-    if (total === 0) {
-      gridContainer.innerHTML = `<div class="fb-empty"><div class="fb-empty-icon">🏟️</div><div class="fb-empty-text">No Football posts found.</div></div>`;
-      loadMoreWrap.style.display = 'none';
-      countPill.innerText = `0 posts`;
-      sectionLabelSpan.innerText = 'Football Posts';
-      return;
-    }
-    const nextBatch = sortedPosts.slice(0, PAGE_SIZE);
-    displayedCount = nextBatch.length;
-    const cardsHtml = nextBatch.map((post, idx) => generateCardHtml(post, idx === 0)).join('');
-    gridContainer.innerHTML = cardsHtml;
-    sectionLabelSpan.innerText = 'Football Posts';
-    countPill.innerText = `${total} post${total !== 1 ? 's' : ''}`;
-    updateLoadMoreUI(total);
-  }
+      const status = comp?.status?.type;
+      const detail = status?.detail || 'LIVE';
 
-  function generateCardHtml(post, isFeatured) {
-    const imgHtml = post.image
-      ? `<img src="${escapeHtml(post.image)}" alt="${escapeHtml(post.title)}" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'fb-card-img-fallback\'>⚽</div>'">`
-      : `<div class="fb-card-img-fallback">⚽</div>`;
-    const shortCode = getShortCode(post.primaryLabel);
-    return `<a href="${escapeHtml(post.link)}" class="fb-card ${isFeatured ? 'fb-card-feat' : ''}" target="_blank" rel="noopener noreferrer">
-      <div class="fb-card-img">
-        <div class="fb-ribbon" data-l="${escapeHtml(shortCode)}">${escapeHtml(shortCode)}</div>
-        ${imgHtml}
-        <div class="fb-img-badge">Watch</div>
-        <div class="fb-play-ov"><div class="fb-play-ring"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div>
-      </div>
-      <div class="fb-card-body">
-        <div class="fb-card-meta">
-          <span class="fb-card-date">${formatDate(post.date)}</span>
-          <span class="fb-card-dot"></span>
-          <span class="fb-card-league-tag">${escapeHtml(post.primaryLabel)}</span>
+      const card = document.createElement('div');
+      card.className = 'score-card live';
+
+      card.innerHTML = `
+        <div class="card-meta">
+          <div class="live-indicator"><span class="live-dot"></span>${detail}</div>
         </div>
-        <div class="fb-card-title">${escapeHtml(post.title)}</div>
-        <div class="fb-card-foot">
-          <span class="fb-read-link">Read more</span>
-          <button class="fb-share-btn" onclick="fbSharePost(event, '${escapeHtml(post.link).replace(/'/g, "\\'")}', '${escapeHtml(post.title).replace(/'/g, "\\'")}')">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-          </button>
+        <div class="teams-row">
+          <div class="team">
+            <img class="team-logo"
+              src="${away.team?.logo || ''}"
+              onerror="this.style.display='none'" alt="">
+            <span class="team-name">${away.team?.shortDisplayName || away.team?.name || '?'}</span>
+          </div>
+          <div class="score-center">
+            <div class="score-nums">${away.score ?? 0} – ${home.score ?? 0}</div>
+          </div>
+          <div class="team right">
+            <img class="team-logo"
+              src="${home.team?.logo || ''}"
+              onerror="this.style.display='none'" alt="">
+            <span class="team-name">${home.team?.shortDisplayName || home.team?.name || '?'}</span>
+          </div>
         </div>
-      </div>
-    </a>`;
-  }
+        <div class="card-actions">
+          <span class="match-time-label">${ev.shortName || ''}</span>
+          <a class="watch-btn" href="${makeWatchUrl(ev)}" target="_blank">▶ Watch Live</a>
+        </div>`;
 
-  function loadMorePosts() {
-    if (displayedCount >= sortedPosts.length) return;
-    const remaining = sortedPosts.slice(displayedCount, displayedCount + PAGE_SIZE);
-    if (remaining.length === 0) return;
-    const fragment = document.createDocumentFragment();
-    remaining.forEach((post) => {
-      const cardDiv = document.createElement('div');
-      cardDiv.innerHTML = generateCardHtml(post, false);
-      fragment.appendChild(cardDiv.firstElementChild);
+      frag.appendChild(card);
+      liveCount++;
     });
-    gridContainer.appendChild(fragment);
-    displayedCount += remaining.length;
-    updateLoadMoreUI(sortedPosts.length);
+  });
+
+  container.innerHTML = '';
+
+  if (!liveCount) {
+    const box = document.createElement('div');
+    box.className = 'state-box';
+    box.innerHTML = `
+      <div class="state-icon">📺</div>
+      <div class="state-title">No live matches right now</div>
+      <div class="state-sub">We'll auto-refresh every 30 seconds<span class="refresh-dot"></span></div>`;
+    container.appendChild(box);
+    countLbl.textContent = '0 matches live';
+  } else {
+    container.appendChild(frag);
+    countLbl.textContent = liveCount + ' match' + (liveCount === 1 ? '' : 'es') + ' live now';
+  }
+}
+
+// ─── LOAD ────────────────────────────────────────────────────────────────────
+async function load(showSkeleton) {
+  if (isLoading) return;
+  isLoading = true;
+
+  if (showSkeleton) {
+    const container = document.getElementById('cards-container');
+    container.innerHTML = Array(4)
+      .fill('<div class="skeleton skel-card"></div>')
+      .join('');
+    document.getElementById('count-label').textContent = 'Loading…';
   }
 
-  function updateLoadMoreUI(total) {
-    if (total <= PAGE_SIZE) {
-      loadMoreWrap.style.display = 'none';
-      return;
-    }
-    loadMoreWrap.style.display = 'flex';
-    const shown = displayedCount;
-    loadProgress.innerText = `${shown} of ${total} posts shown`;
-    const percent = (shown / total) * 100;
-    progressFill.style.width = `${percent}%`;
-    if (shown >= total) {
-      loadMoreBtn.style.display = 'none';
-    } else {
-      loadMoreBtn.style.display = 'flex';
-    }
-  }
+  allData  = await fetchAll();
+  isLoading = false;
+  render();
+}
 
-  function setSort() {
-    currentSort = sortSelect.value;
-    applySortAndSearch();
-  }
+// ─── MANUAL REFRESH ──────────────────────────────────────────────────────────
+async function triggerRefresh() {
+  const btn  = document.getElementById('refresh-btn');
+  const icon = document.getElementById('refresh-icon');
+  btn.classList.add('spinning');
+  icon.style.animation = 'spin .7s linear';
+  // Invalidate cache for fresh data
+  _cache.clear();
+  await load(false);
+  icon.style.animation = '';
+  btn.classList.remove('spinning');
+}
+window.triggerRefresh = triggerRefresh;
 
-  function setSearch() {
-    searchQuery = searchInput.value;
-    applySortAndSearch();
-  }
+// ─── AUTO-REFRESH ────────────────────────────────────────────────────────────
+setInterval(async () => {
+  await load(false);
+}, REFRESH_MS);
 
-  window.fbSharePost = function(event, url, title) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (navigator.share) {
-      navigator.share({ title: title, url: url }).catch(e => console.log);
-    } else {
-      navigator.clipboard && navigator.clipboard.writeText(url);
-      alert("Link copied to clipboard!");
-    }
-  };
-
-  async function init() {
-    gridContainer.innerHTML = '<div class="fb-loading"><div class="fb-spinner"></div> Loading Football posts...</div>';
-    try {
-      const posts = await fetchFootballPosts();
-      allPosts = posts;
-      if (allPosts.length === 0) {
-        gridContainer.innerHTML = '<div class="fb-empty"><div class="fb-empty-icon">⚠️</div><div class="fb-empty-text">No posts with the "Football" label found. Make sure the blog has posts under that label.</div></div>';
-        countPill.innerText = '0';
-        return;
-      }
-      applySortAndSearch();
-      sortSelect.addEventListener('change', setSort);
-      searchInput.addEventListener('input', setSearch);
-      loadMoreBtn.addEventListener('click', loadMorePosts);
-    } catch (err) {
-      console.error(err);
-      gridContainer.innerHTML = `<div class="fb-empty"><div class="fb-empty-icon">🔌</div><div class="fb-empty-text">${err.message || 'Unable to fetch posts. Ensure the blog is public and the "Football" label exists.'}</div></div>`;
-      countPill.innerText = '0';
-    }
-  }
-
-  init();
-})();
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+load(true);
 </script>
+
 </body>
 </html>
