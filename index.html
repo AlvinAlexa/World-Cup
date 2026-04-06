@@ -1,631 +1,757 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sports 803 — Live Scores</title>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Live Sports Hub — Today's Events & Live Scores</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    :root {
-      --bg:    #080808;
-      --bg2:   #111;
-      --bg3:   #181818;
-      --bg4:   #232323;
-      --red:   #e8192c;
-      --red2:  #ff2d42;
-      --green: #00e676;
-      --gold:  #f5b800;
-      --text:  #f0f0f0;
-      --dim:   #666;
-      --mid:   #aaa;
-      --border:rgba(255,255,255,.07);
-      --radius:14px;
-      --fh:    'Barlow Condensed',sans-serif;
-      --fb:    'DM Sans',sans-serif;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
-```
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--fb);
-  min-height: 100vh;
-}
+    :root {
+      --bg: #0a0a0a;
+      --surface: #121212;
+      --card: #1e1e1e;
+      --border: rgba(255, 255, 255, 0.08);
+      --red: #e8192c;
+      --red-hover: #ff2d42;
+      --green: #00e676;
+      --text: #ffffff;
+      --text-dim: #aaa;
+      --text-muted: #6b6b6b;
+      --radius: 16px;
+      --max-width: 800px;
+    }
 
-/* ── WRAPPER ── */
-#live-scores-widget {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 0 0 24px;
-}
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.5;
+      padding-bottom: 20px;
+    }
 
-/* ── HEADER ── */
-.widget-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 16px 12px;
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  background: rgba(8,8,8,.97);
-  backdrop-filter: blur(14px);
-  z-index: 10;
-}
-.widget-title {
-  font-family: var(--fh);
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.widget-live-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--red);
-  font-family: var(--fh);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  animation: blink 1.4s infinite;
-}
-.widget-refresh-btn {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  color: var(--mid);
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: .15s;
-  font-family: var(--fb);
-}
-.widget-refresh-btn:hover { border-color: var(--red); color: var(--text); }
-.widget-refresh-btn.spinning .refresh-icon { animation: spin .7s linear; }
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 16px 32px;
+    }
 
-/* ── FILTER PILLS ── */
-#filter-pills {
-  display: flex;
-  gap: 7px;
-  padding: 10px 14px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  border-bottom: 1px solid var(--border);
-}
-#filter-pills::-webkit-scrollbar { display: none; }
-.filter-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 13px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 30px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: .15s;
-  font-family: var(--fb);
-  color: var(--text);
-}
-.filter-pill:hover, .filter-pill.active {
-  background: var(--red);
-  border-color: var(--red);
-  color: #fff;
-}
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      background: rgba(10, 10, 10, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      z-index: 10;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
 
-/* ── COUNT BAR ── */
-#count-bar {
-  padding: 8px 16px;
-  font-size: 11px;
-  color: var(--dim);
-  font-weight: 600;
-  letter-spacing: .4px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.refresh-dot {
-  display: inline-block;
-  width: 6px; height: 6px;
-  background: var(--green);
-  border-radius: 50%;
-  margin-left: 5px;
-  animation: blink 2s infinite;
-  vertical-align: middle;
-}
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff, #ccc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
 
-/* ── LEAGUE HEADER ── */
-.lg-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--bg2);
-  border-left: 3px solid var(--red);
-  margin-top: 8px;
-  font-family: var(--fh);
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: .8px;
-  color: var(--mid);
-  text-transform: uppercase;
-}
-.lg-live-count {
-  margin-left: auto;
-  background: rgba(232,25,44,.15);
-  color: var(--red);
-  border: 1px solid rgba(232,25,44,.3);
-  border-radius: 12px;
-  font-size: 10px;
-  padding: 2px 8px;
-  font-weight: 800;
-}
+    .logo span {
+      background: linear-gradient(135deg, var(--red), #ff6b7c);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
 
-/* ── SCORE CARD ── */
-.score-card {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  margin: 0 12px 8px;
-  transition: .15s;
-}
-.score-card.live {
-  border-color: rgba(232,25,44,.4);
-  background: linear-gradient(160deg, #130404 0%, #111 100%);
-  box-shadow: 0 0 0 1px rgba(232,25,44,.08), 0 4px 20px rgba(0,0,0,.4);
-}
-.score-card:hover { border-color: rgba(232,25,44,.3); }
+    .refresh-badge {
+      background: var(--red);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
 
-.card-meta {
-  font-size: 10px;
-  color: var(--dim);
-  font-weight: 700;
-  letter-spacing: .9px;
-  text-transform: uppercase;
-  margin-bottom: 9px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+    .refresh-badge:active {
+      transform: scale(0.96);
+    }
 
-.teams-row {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 8px;
-}
-.team {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-.team.right {
-  flex-direction: row-reverse;
-  text-align: right;
-}
-.team-logo {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
-  flex-shrink: 0;
-  border-radius: 4px;
-}
-.team-name {
-  font-weight: 700;
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 1.2s infinite;
+    }
 
-.score-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
-  min-width: 70px;
-}
-.score-nums {
-  font-family: var(--fh);
-  font-size: 28px;
-  font-weight: 900;
-  letter-spacing: 3px;
-  line-height: 1;
-}
-.score-status {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .8px;
-  color: var(--dim);
-}
-.score-status.live {
-  color: var(--red);
-  animation: blink 1.4s infinite;
-}
-.live-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--red);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-.live-dot {
-  width: 7px; height: 7px;
-  background: var(--red);
-  border-radius: 50%;
-  animation: blink 1s infinite;
-  flex-shrink: 0;
-}
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
 
-/* ── ACTIONS ── */
-.card-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-}
-.match-time-label {
-  font-size: 11px;
-  color: var(--dim);
-  font-weight: 600;
-}
-.watch-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, var(--red), var(--red2));
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  font-family: var(--fh);
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: .5px;
-  padding: 7px 16px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: transform .15s, box-shadow .15s;
-}
-.watch-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 18px rgba(232,25,44,.5);
-}
-.watch-btn:active { transform: scale(.97); }
+    /* Section */
+    .section {
+      margin-top: 28px;
+    }
 
-/* ── SKELETON ── */
-.skeleton {
-  background: linear-gradient(90deg, #1e1e1e 25%, #2a2a2a 50%, #1e1e1e 75%);
-  background-size: 200% auto;
-  animation: shimmer 1.3s infinite;
-  border-radius: 8px;
-}
-.skel-card {
-  height: 96px;
-  margin: 0 12px 8px;
-  border-radius: var(--radius);
-}
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--border);
+    }
 
-/* ── EMPTY / ERROR ── */
-.state-box {
-  text-align: center;
-  padding: 44px 20px 32px;
-  color: var(--dim);
-}
-.state-icon { font-size: 48px; margin-bottom: 12px; }
-.state-title { font-size: 16px; font-weight: 700; color: var(--mid); margin-bottom: 6px; }
-.state-sub   { font-size: 13px; }
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-/* ── FOOTER ── */
-.widget-footer {
-  text-align: center;
-  padding: 14px;
-  font-size: 11px;
-  color: var(--dim);
-  border-top: 1px solid var(--border);
-  margin-top: 8px;
-}
-.widget-footer a { color: var(--red); text-decoration: none; font-weight: 700; }
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 20px;
+      background: var(--red);
+      border-radius: 4px;
+    }
 
-/* ── KEYFRAMES ── */
-@keyframes blink   { 0%,100%{opacity:1} 50%{opacity:.45} }
-@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-@keyframes spin    { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+    .count {
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--surface);
+      padding: 2px 8px;
+      border-radius: 20px;
+      color: var(--text-dim);
+    }
 
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar { width:4px; height:4px; }
-::-webkit-scrollbar-track { background:var(--bg2); }
-::-webkit-scrollbar-thumb { background:var(--bg4); border-radius:2px; }
-::-webkit-scrollbar-thumb:hover { background:var(--red); }
+    /* Score Card (Live) */
+    .score-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
 
-/* ── RESPONSIVE ── */
-@media(max-width:400px) {
-  .team-name { font-size:12px; }
-  .score-nums { font-size:22px; }
-  .score-center { min-width:60px; }
-}
-```
+    .score-card:hover {
+      border-color: rgba(232, 25, 44, 0.4);
+      background: #232323;
+    }
 
+    .league-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .match-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .team {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .team.right {
+      flex-direction: row-reverse;
+      text-align: right;
+      justify-content: flex-start;
+    }
+
+    .team-logo {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+      padding: 4px;
+    }
+
+    .team-name {
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .score-center {
+      text-align: center;
+      flex-shrink: 0;
+      min-width: 70px;
+    }
+
+    .score-numbers {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
+    .live-badge {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--green);
+      background: rgba(0, 230, 118, 0.15);
+      padding: 3px 8px;
+      border-radius: 20px;
+      margin-top: 4px;
+      display: inline-block;
+      animation: pulse 1.2s infinite;
+    }
+
+    .watch-btn {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      background: var(--red);
+      border: none;
+      color: white;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 8px;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: 0.2s;
+      text-align: center;
+      font-family: inherit;
+    }
+
+    .watch-btn:active {
+      transform: scale(0.98);
+      background: var(--red-hover);
+    }
+
+    /* Event Card (Today's schedule) */
+    .event-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .event-card:hover {
+      background: #232323;
+      border-color: rgba(232, 25, 44, 0.3);
+    }
+
+    .event-time {
+      min-width: 60px;
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--red);
+    }
+
+    .event-time.live {
+      color: var(--green);
+    }
+
+    .event-info {
+      flex: 1;
+    }
+
+    .event-name {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .event-league {
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .status-badge.live {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--green);
+    }
+
+    .status-badge.today {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-dim);
+    }
+
+    /* Empty states & loaders */
+    .skeleton {
+      background: linear-gradient(90deg, #1e1e1e 25%, #2a2a2a 50%, #1e1e1e 75%);
+      background-size: 200% auto;
+      animation: shimmer 1.2s infinite;
+      border-radius: 14px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .score-skeleton {
+      height: 110px;
+      margin-bottom: 12px;
+    }
+
+    .event-skeleton {
+      height: 70px;
+      margin-bottom: 10px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-dim);
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1f1f1f;
+      border-left: 3px solid var(--red);
+      padding: 10px 18px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: 0.2s;
+      pointer-events: none;
+      z-index: 200;
+      white-space: nowrap;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-8px);
+    }
+
+    button {
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 0 12px 32px;
+      }
+      .team-logo {
+        width: 28px;
+        height: 28px;
+      }
+      .team-name {
+        font-size: 12px;
+      }
+      .score-numbers {
+        font-size: 22px;
+      }
+    }
   </style>
 </head>
 <body>
 
-<div id="live-scores-widget">
-
-  <!-- HEADER -->
-
-  <div class="widget-header">
-    <div class="widget-title">
-      🔴 Live Scores
-      <span class="widget-live-badge">● LIVE</span>
-    </div>
-    <button class="widget-refresh-btn" id="refresh-btn" onclick="triggerRefresh()">
-      <span class="refresh-icon" id="refresh-icon">↻</span> Refresh
-    </button>
+<div class="header">
+  <div class="logo">SPORTS <span>803</span> · TODAY</div>
+  <div class="refresh-badge" id="manual-refresh">
+    <span class="live-dot"></span> REFRESH
   </div>
-
-  <!-- FILTER PILLS -->
-
-  <div id="filter-pills">
-    <div class="filter-pill active" data-sport="all" onclick="setFilter('all')">🌍 All</div>
-    <div class="filter-pill" data-sport="soccer"     onclick="setFilter('soccer')">⚽ Football</div>
-    <div class="filter-pill" data-sport="basketball" onclick="setFilter('basketball')">🏀 NBA</div>
-    <div class="filter-pill" data-sport="football"   onclick="setFilter('football')">🏈 NFL</div>
-    <div class="filter-pill" data-sport="hockey"     onclick="setFilter('hockey')">🏒 NHL</div>
-    <div class="filter-pill" data-sport="mma"        onclick="setFilter('mma')">🥊 MMA</div>
-  </div>
-
-  <!-- COUNT BAR -->
-
-  <div id="count-bar">
-    <span id="count-label">Loading…</span>
-    <span>Auto-refresh 30s<span class="refresh-dot"></span></span>
-  </div>
-
-  <!-- CARDS CONTAINER -->
-
-  <div id="cards-container"></div>
-
-  <!-- FOOTER -->
-
-  <div class="widget-footer">
-    Powered by <a href="https://sports803livestream.blogspot.com" target="_blank">Sports 803</a>
-    · Data via ESPN API
-  </div>
-
 </div>
 
+<div class="container">
+  <!-- LIVE NOW SECTION -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">🔴 LIVE NOW</div>
+      <div class="count" id="live-count">0</div>
+    </div>
+    <div id="live-scores-container"></div>
+  </div>
+
+  <!-- TODAY'S SCHEDULE (ALL EVENTS TODAY, SORTED: LIVE FIRST, THEN TIME) -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">📅 TODAY'S EVENTS</div>
+      <div class="count" id="events-count">0</div>
+    </div>
+    <div id="today-events-container"></div>
+  </div>
+
+  <div class="footer">
+    Auto-refresh every 30s • Data via ESPN
+  </div>
+</div>
+
+<div id="toast"></div>
+
 <script>
-// ══════════════════════════════════════════════════════════════════════════════
-// SPORTS 803 — LIVE SCORES WIDGET (Standalone)
-// ══════════════════════════════════════════════════════════════════════════════
+  // ───────────────────────────────────────────────────────────────────────────
+  // CONFIGURATION
+  // ───────────────────────────────────────────────────────────────────────────
+  const CACHE_TTL = 30000; // 30 seconds
+  const BLOG_BASE = 'https://sports803livestream.blogspot.com';
 
-const WATCH_BASE = 'https://sports803livestream.blogspot.com/search?q=';
-const REFRESH_MS = 30000;
+  // ESPN leagues (scalable, includes MLS, Championship, etc.)
+  const LEAGUES = [
+    { sport: 'soccer', league: 'eng.1', name: 'Premier League', icon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+    { sport: 'soccer', league: 'eng.2', name: 'Championship', icon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+    { sport: 'soccer', league: 'usa.1', name: 'MLS', icon: '🇺🇸' },
+    { sport: 'soccer', league: 'uefa.champions', name: 'UEFA Champions League', icon: '⭐' },
+    { sport: 'soccer', league: 'esp.1', name: 'La Liga', icon: '🇪🇸' },
+    { sport: 'soccer', league: 'ita.1', name: 'Serie A', icon: '🇮🇹' },
+    { sport: 'soccer', league: 'ger.1', name: 'Bundesliga', icon: '🇩🇪' },
+    { sport: 'soccer', league: 'fra.1', name: 'Ligue 1', icon: '🇫🇷' },
+    { sport: 'basketball', league: 'nba', name: 'NBA', icon: '🏀' },
+    { sport: 'football', league: 'nfl', name: 'NFL', icon: '🏈' },
+    { sport: 'mma', league: 'ufc', name: 'UFC', icon: '🥊' },
+    { sport: 'hockey', league: 'nhl', name: 'NHL', icon: '🏒' },
+    { sport: 'soccer', league: 'ned.1', name: 'Eredivisie', icon: '🇳🇱' },
+    { sport: 'soccer', league: 'por.1', name: 'Primeira Liga', icon: '🇵🇹' }
+  ];
 
-// ─── SCALABLE LEAGUES — add here to show more ────────────────────────────────
-const LEAGUES = [
-  { sport:'soccer',     key:'eng.1',          name:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League',  short:'EPL',         emoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
-  { sport:'soccer',     key:'eng.2',           name:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Championship',   short:'CHAMP',       emoji:'🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
-  { sport:'soccer',     key:'uefa.champions',  name:'⭐ Champions League', short:'UCL',         emoji:'⭐'  },
-  { sport:'soccer',     key:'esp.1',           name:'🇪🇸 La Liga',         short:'LaLiga',      emoji:'🇪🇸' },
-  { sport:'soccer',     key:'ita.1',           name:'🇮🇹 Serie A',          short:'SerieA',      emoji:'🇮🇹' },
-  { sport:'soccer',     key:'ger.1',           name:'🇩🇪 Bundesliga',       short:'Bundesliga',  emoji:'🇩🇪' },
-  { sport:'soccer',     key:'fra.1',           name:'🇫🇷 Ligue 1',          short:'Ligue 1',     emoji:'🇫🇷' },
-  { sport:'soccer',     key:'usa.1',           name:'🇺🇸 MLS',              short:'MLS',         emoji:'🇺🇸' },
-  { sport:'basketball', key:'nba',             name:'🏀 NBA',              short:'NBA',         emoji:'🏀' },
-  { sport:'football',   key:'nfl',             name:'🏈 NFL',              short:'NFL',         emoji:'🏈' },
-  { sport:'hockey',     key:'nhl',             name:'🏒 NHL',              short:'NHL',         emoji:'🏒' },
-  { sport:'mma',        key:'ufc',             name:'🥊 UFC',              short:'UFC',         emoji:'🥊' },
-];
+  // Cache
+  const cache = {
+    live: { data: null, timestamp: 0, promise: null },
+    today: { data: null, timestamp: 0, promise: null }
+  };
 
-// ─── STATE ───────────────────────────────────────────────────────────────────
-let allData      = [];   // raw fetched results [{...lg, events:[...]}]
-let activeFilter = 'all';
-let isLoading    = false;
-
-// ─── CACHE ───────────────────────────────────────────────────────────────────
-const _cache  = new Map();
-const TTL     = 25000;
-
-async function fetchESPN(sport, key) {
-  const ck  = sport + '/' + key;
-  const now = Date.now();
-  const hit = _cache.get(ck);
-  if (hit && now - hit.ts < TTL) return hit.data;
-  try {
-    const r    = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport}/${key}/scoreboard`);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-    _cache.set(ck, { data, ts: now });
-    return data;
-  } catch (e) {
-    console.warn('[LiveScores]', ck, e.message);
-    return hit ? hit.data : null;
+  // Helper: escape HTML
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
   }
-}
 
-// ─── FETCH ALL ───────────────────────────────────────────────────────────────
-async function fetchAll() {
-  const results = await Promise.all(
-    LEAGUES.map(lg =>
-      fetchESPN(lg.sport, lg.key).then(data =>
-        Object.assign({}, lg, { events: data ? (data.events || []) : [] })
-      )
-    )
-  );
-  return results;
-}
+  // Toast notification
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2000);
+  }
 
-// ─── WATCH URL ───────────────────────────────────────────────────────────────
-function makeWatchUrl(ev) {
-  const comp  = ev.competitions?.[0];
-  const home  = comp?.competitors?.find(c => c.homeAway === 'home');
-  const away  = comp?.competitors?.find(c => c.homeAway === 'away');
-  const nameA = away?.team?.displayName || away?.team?.name || '';
-  const nameB = home?.team?.displayName || home?.team?.name || '';
-  return WATCH_BASE + encodeURIComponent(`${nameA} vs ${nameB}`);
-}
+  // Fetch with cache
+  async function fetchWithCache(key, fetcher) {
+    const now = Date.now();
+    const cached = cache[key];
+    if (cached.data && (now - cached.timestamp) < CACHE_TTL) return cached.data;
+    if (cached.promise) return cached.promise;
+    cached.promise = fetcher()
+      .then(data => {
+        cached.data = data;
+        cached.timestamp = now;
+        cached.promise = null;
+        return data;
+      })
+      .catch(err => {
+        cached.promise = null;
+        throw err;
+      });
+    return cached.promise;
+  }
 
-// ─── FORMAT TIME ─────────────────────────────────────────────────────────────
-function fmtTime(dateStr) {
-  return new Date(dateStr).toLocaleTimeString('en', { hour:'2-digit', minute:'2-digit', hour12:true });
-}
-
-// ─── FILTER ──────────────────────────────────────────────────────────────────
-function setFilter(sport) {
-  activeFilter = sport;
-  document.querySelectorAll('.filter-pill').forEach(p => {
-    p.classList.toggle('active', p.dataset.sport === sport);
-  });
-  render();
-}
-window.setFilter = setFilter;
-
-// ─── RENDER ──────────────────────────────────────────────────────────────────
-function render() {
-  const container = document.getElementById('cards-container');
-  const countLbl  = document.getElementById('count-label');
-  const frag      = document.createDocumentFragment();
-  let   liveCount = 0;
-
-  // Filter leagues by sport pill
-  const filtered = activeFilter === 'all'
-    ? allData
-    : allData.filter(lg => lg.sport === activeFilter);
-
-  filtered.forEach(lg => {
-    // Only LIVE events
-    const liveEvents = lg.events.filter(ev =>
-      ev.competitions?.[0]?.status?.type?.state === 'in'
-    );
-    if (!liveEvents.length) return;
-
-    // League header
-    const lgHdr = document.createElement('div');
-    lgHdr.className = 'lg-header';
-    lgHdr.innerHTML = `${lg.name} <span class="lg-live-count">${liveEvents.length} LIVE</span>`;
-    frag.appendChild(lgHdr);
-
-    liveEvents.forEach(ev => {
-      const comp   = ev.competitions?.[0];
-      const home   = comp?.competitors?.find(c => c.homeAway === 'home');
-      const away   = comp?.competitors?.find(c => c.homeAway === 'away');
-      if (!home || !away) return;
-
-      const status = comp?.status?.type;
-      const detail = status?.detail || 'LIVE';
-
-      const card = document.createElement('div');
-      card.className = 'score-card live';
-
-      card.innerHTML = `
-        <div class="card-meta">
-          <div class="live-indicator"><span class="live-dot"></span>${detail}</div>
-        </div>
-        <div class="teams-row">
-          <div class="team">
-            <img class="team-logo"
-              src="${away.team?.logo || ''}"
-              onerror="this.style.display='none'" alt="">
-            <span class="team-name">${away.team?.shortDisplayName || away.team?.name || '?'}</span>
-          </div>
-          <div class="score-center">
-            <div class="score-nums">${away.score ?? 0} – ${home.score ?? 0}</div>
-          </div>
-          <div class="team right">
-            <img class="team-logo"
-              src="${home.team?.logo || ''}"
-              onerror="this.style.display='none'" alt="">
-            <span class="team-name">${home.team?.shortDisplayName || home.team?.name || '?'}</span>
-          </div>
-        </div>
-        <div class="card-actions">
-          <span class="match-time-label">${ev.shortName || ''}</span>
-          <a class="watch-btn" href="${makeWatchUrl(ev)}" target="_blank">▶ Watch Live</a>
-        </div>`;
-
-      frag.appendChild(card);
-      liveCount++;
+  // ───────────────────────────────────────────────────────────────────────────
+  // FETCH ALL LIVE MATCHES (status = "in")
+  // ───────────────────────────────────────────────────────────────────────────
+  async function fetchLiveMatches() {
+    const promises = LEAGUES.map(async (league) => {
+      try {
+        const url = `https://site.api.espn.com/apis/site/v2/sports/${league.sport}/${league.league}/scoreboard`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const events = data.events || [];
+        return events
+          .filter(ev => ev.competitions?.[0]?.status?.type?.state === 'in')
+          .map(ev => {
+            const comp = ev.competitions[0];
+            const home = comp.competitors?.find(c => c.homeAway === 'home');
+            const away = comp.competitors?.find(c => c.homeAway === 'away');
+            if (!home || !away) return null;
+            return {
+              id: ev.id,
+              leagueName: league.name,
+              leagueIcon: league.icon,
+              home: {
+                name: home.team?.shortDisplayName || home.team?.name || 'Home',
+                logo: home.team?.logo,
+                score: home.score || 0
+              },
+              away: {
+                name: away.team?.shortDisplayName || away.team?.name || 'Away',
+                logo: away.team?.logo,
+                score: away.score || 0
+              },
+              statusText: comp.status?.type?.detail || 'LIVE'
+            };
+          })
+          .filter(Boolean);
+      } catch (err) {
+        console.warn(`Error fetching ${league.name}:`, err);
+        return [];
+      }
     });
+    const results = await Promise.all(promises);
+    return results.flat();
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // FETCH TODAY'S EVENTS (all events happening today, sorted: live first then time)
+  // ───────────────────────────────────────────────────────────────────────────
+  async function fetchTodayEvents() {
+    const todayStr = new Date().toDateString();
+    const promises = LEAGUES.map(async (league) => {
+      try {
+        const url = `https://site.api.espn.com/apis/site/v2/sports/${league.sport}/${league.league}/scoreboard`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const events = data.events || [];
+        return events
+          .filter(ev => {
+            const evDate = new Date(ev.date);
+            return evDate.toDateString() === todayStr;
+          })
+          .map(ev => {
+            const comp = ev.competitions?.[0];
+            const home = comp?.competitors?.find(c => c.homeAway === 'home');
+            const away = comp?.competitors?.find(c => c.homeAway === 'away');
+            const isLive = comp?.status?.type?.state === 'in';
+            let matchName = ev.shortName || ev.name;
+            if (away && home) {
+              matchName = `${away.team?.shortDisplayName || away.team?.name} vs ${home.team?.shortDisplayName || home.team?.name}`;
+            }
+            return {
+              id: ev.id,
+              leagueName: league.name,
+              leagueIcon: league.icon,
+              matchName: matchName,
+              startTime: ev.date,
+              isLive: isLive,
+              timeDisplay: isLive ? 'LIVE' : new Date(ev.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+          });
+      } catch (err) {
+        return [];
+      }
+    });
+    let allEvents = (await Promise.all(promises)).flat();
+    // Sort: live first, then by start time ascending
+    allEvents.sort((a, b) => {
+      if (a.isLive && !b.isLive) return -1;
+      if (!a.isLive && b.isLive) return 1;
+      return new Date(a.startTime) - new Date(b.startTime);
+    });
+    return allEvents;
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // RENDER LIVE SCORES
+  // ───────────────────────────────────────────────────────────────────────────
+  async function renderLiveMatches() {
+    const container = document.getElementById('live-scores-container');
+    if (!container) return;
+    // Show skeletons
+    container.innerHTML = '<div class="score-skeleton skeleton"></div><div class="score-skeleton skeleton"></div>';
+    
+    try {
+      const matches = await fetchWithCache('live', fetchLiveMatches);
+      const liveCount = matches.length;
+      document.getElementById('live-count').innerText = liveCount;
+      
+      if (liveCount === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📺</div><div>No live matches at the moment</div><div style="font-size:13px; margin-top:8px">Check back soon!</div></div>`;
+        return;
+      }
+      
+      container.innerHTML = matches.map(match => `
+        <div class="score-card" data-away="${escapeHtml(match.away.name)}" data-home="${escapeHtml(match.home.name)}">
+          <div class="league-tag">${match.leagueIcon} ${escapeHtml(match.leagueName)}</div>
+          <div class="match-row">
+            <div class="team">
+              <img class="team-logo" src="${match.away.logo || ''}" onerror="this.style.display='none'" alt="">
+              <span class="team-name">${escapeHtml(match.away.name)}</span>
+            </div>
+            <div class="score-center">
+              <div class="score-numbers">${match.away.score} – ${match.home.score}</div>
+              <div class="live-badge">● LIVE</div>
+            </div>
+            <div class="team right">
+              <img class="team-logo" src="${match.home.logo || ''}" onerror="this.style.display='none'" alt="">
+              <span class="team-name">${escapeHtml(match.home.name)}</span>
+            </div>
+          </div>
+          <button class="watch-btn">📺 WATCH LIVE</button>
+        </div>
+      `).join('');
+      
+      // Attach click handlers for watch buttons and cards
+      document.querySelectorAll('#live-scores-container .score-card').forEach(card => {
+        const watchBtn = card.querySelector('.watch-btn');
+        const away = card.dataset.away;
+        const home = card.dataset.home;
+        watchBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const query = encodeURIComponent(`${away} vs ${home}`);
+          window.open(`${BLOG_BASE}/search?q=${query}`, '_blank');
+        });
+        card.addEventListener('click', (e) => {
+          if (e.target.classList.contains('watch-btn')) return;
+          const query = encodeURIComponent(`${away} vs ${home}`);
+          window.open(`${BLOG_BASE}/search?q=${query}`, '_blank');
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div>Failed to load live scores</div></div>`;
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // RENDER TODAY'S EVENTS
+  // ───────────────────────────────────────────────────────────────────────────
+  async function renderTodayEvents() {
+    const container = document.getElementById('today-events-container');
+    if (!container) return;
+    container.innerHTML = '<div class="event-skeleton skeleton"></div><div class="event-skeleton skeleton"></div>';
+    
+    try {
+      const events = await fetchWithCache('today', fetchTodayEvents);
+      const eventsCount = events.length;
+      document.getElementById('events-count').innerText = eventsCount;
+      
+      if (eventsCount === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><div>No events scheduled for today</div></div>`;
+        return;
+      }
+      
+      container.innerHTML = events.map(ev => `
+        <div class="event-card" data-match="${escapeHtml(ev.matchName)}">
+          <div class="event-time ${ev.isLive ? 'live' : ''}">${ev.timeDisplay}</div>
+          <div class="event-info">
+            <div class="event-name">${escapeHtml(ev.matchName)}</div>
+            <div class="event-league">${ev.leagueIcon} ${escapeHtml(ev.leagueName)}</div>
+          </div>
+          <div class="status-badge ${ev.isLive ? 'live' : 'today'}">${ev.isLive ? '● LIVE' : 'TODAY'}</div>
+        </div>
+      `).join('');
+      
+      // Click on event -> search on blog
+      document.querySelectorAll('#today-events-container .event-card').forEach(card => {
+        const matchName = card.dataset.match;
+        card.addEventListener('click', () => {
+          if (matchName) {
+            const query = encodeURIComponent(matchName);
+            window.open(`${BLOG_BASE}/search?q=${query}`, '_blank');
+          }
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div>Unable to load today's events</div></div>`;
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // AUTO-REFRESH (every 30 seconds)
+  // ───────────────────────────────────────────────────────────────────────────
+  let refreshInterval;
+  function startAutoRefresh() {
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(() => {
+      // Invalidate cache
+      cache.live.timestamp = 0;
+      cache.today.timestamp = 0;
+      // Re-fetch & re-render
+      renderLiveMatches();
+      renderTodayEvents();
+      toast('🔄 Refreshed live scores & events');
+    }, CACHE_TTL);
+  }
+
+  // Manual refresh button
+  document.getElementById('manual-refresh').addEventListener('click', () => {
+    cache.live.timestamp = 0;
+    cache.today.timestamp = 0;
+    renderLiveMatches();
+    renderTodayEvents();
+    toast('Manual refresh complete');
   });
 
-  container.innerHTML = '';
-
-  if (!liveCount) {
-    const box = document.createElement('div');
-    box.className = 'state-box';
-    box.innerHTML = `
-      <div class="state-icon">📺</div>
-      <div class="state-title">No live matches right now</div>
-      <div class="state-sub">We'll auto-refresh every 30 seconds<span class="refresh-dot"></span></div>`;
-    container.appendChild(box);
-    countLbl.textContent = '0 matches live';
-  } else {
-    container.appendChild(frag);
-    countLbl.textContent = liveCount + ' match' + (liveCount === 1 ? '' : 'es') + ' live now';
-  }
-}
-
-// ─── LOAD ────────────────────────────────────────────────────────────────────
-async function load(showSkeleton) {
-  if (isLoading) return;
-  isLoading = true;
-
-  if (showSkeleton) {
-    const container = document.getElementById('cards-container');
-    container.innerHTML = Array(4)
-      .fill('<div class="skeleton skel-card"></div>')
-      .join('');
-    document.getElementById('count-label').textContent = 'Loading…';
-  }
-
-  allData  = await fetchAll();
-  isLoading = false;
-  render();
-}
-
-// ─── MANUAL REFRESH ──────────────────────────────────────────────────────────
-async function triggerRefresh() {
-  const btn  = document.getElementById('refresh-btn');
-  const icon = document.getElementById('refresh-icon');
-  btn.classList.add('spinning');
-  icon.style.animation = 'spin .7s linear';
-  // Invalidate cache for fresh data
-  _cache.clear();
-  await load(false);
-  icon.style.animation = '';
-  btn.classList.remove('spinning');
-}
-window.triggerRefresh = triggerRefresh;
-
-// ─── AUTO-REFRESH ────────────────────────────────────────────────────────────
-setInterval(async () => {
-  await load(false);
-}, REFRESH_MS);
-
-// ─── BOOT ────────────────────────────────────────────────────────────────────
-load(true);
+  // ───────────────────────────────────────────────────────────────────────────
+  // INITIAL LOAD
+  // ───────────────────────────────────────────────────────────────────────────
+  renderLiveMatches();
+  renderTodayEvents();
+  startAutoRefresh();
 </script>
-
 </body>
 </html>
